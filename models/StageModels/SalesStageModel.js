@@ -10,6 +10,7 @@ const SalesStageSchema = new mongoose.Schema({
   },
   level: { 
     type: Number 
+    
   },
 });
 

@@ -1,12 +1,12 @@
 import { ServerError } from "../../utils/customErrorHandler.utils.js";
 import { catchAsyncError } from "../../middlewares/catchAsyncError.middleware.js";
-import SolutionMasterModel from "../../models/Configuration/SolutionModel.js";
+import SolutionModel from "../../models/Configuration/SolutionModel.js";
 
 class SolutionController {
     // Create SolutionMaster
     static createSolution = catchAsyncError(async (req, res, next) => {
         const { label, description } = req.body;
-        const newSolutionMaster = await SolutionMasterModel.create({ label, description });
+        const newSolutionMaster = await SolutionModel.create({ label, description });
         res.status(201).json({
             status: 'success',
             message: 'Solution Master created successfully',
@@ -16,7 +16,7 @@ class SolutionController {
 
     // Get all SolutionMasters
     static getAllSolution = catchAsyncError(async (req, res, next) => {
-        const solutionMasters = await SolutionMasterModel.find();
+        const solutionMasters = await SolutionModel.find();
         res.status(200).json({
             status: 'success',
             message: 'All Solution Masters retrieved successfully',
@@ -27,7 +27,7 @@ class SolutionController {
     // Get SolutionMaster by ID
     static getSolutionById = catchAsyncError(async (req, res, next) => {
         const { id } = req.params;
-        const solutionMaster = await SolutionMasterModel.findById(id);
+        const solutionMaster = await SolutionModel.findById(id);
         if (!solutionMaster) throw new ServerError("NotFound", "Solution Master");
         res.status(200).json({
             status: 'success',
@@ -40,7 +40,8 @@ class SolutionController {
     static updateSolution = catchAsyncError(async (req, res, next) => {
         const { id } = req.params;
         const { label, description } = req.body;
-        const solutionMaster = await SolutionMasterModel.findById(id);
+        
+        const solutionMaster = await SolutionModel.findById(id);
     
         if (!solutionMaster) throw new ServerError("NotFound", "Solution Master");
     
@@ -59,7 +60,7 @@ class SolutionController {
     static deleteSolution = catchAsyncError(async (req, res, next) => {
         const { id } = req.params;
     
-        const solutionMaster = await SolutionMasterModel.findByIdAndDelete(id);
+        const solutionMaster = await SolutionModel.findByIdAndDelete(id);
     
         res.status(200).json({
             status: 'success',

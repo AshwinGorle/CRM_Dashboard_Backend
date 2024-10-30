@@ -78,12 +78,12 @@ class SalesSubStageController {
     // Update SalesSubStageMaster
     static updateSalesSubStage = catchAsyncError(async (req, res, next) => {
         const { id } = req.params;
-        const { name, salesStage, description } = req.body;
+        const { label, salesStage, description } = req.body;
         const salesSubStageMaster = await SalesSubStageModel.findById(id);
     
         if (!salesSubStageMaster) throw new ServerError("NotFound", "Sales Sub-Stage Master");
     
-        salesSubStageMaster.name = name;
+        salesSubStageMaster.label = label;
         salesSubStageMaster.salesStage = salesStage;
         salesSubStageMaster.description = description;
         const updatedSalesSubStageMaster = await salesSubStageMaster.save();

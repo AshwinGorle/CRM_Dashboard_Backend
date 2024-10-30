@@ -9,7 +9,7 @@ class SubSolutionController {
         const newSubSolutionMaster = await SubSolutionModel.create({ label, description });
         res.status(201).json({
             status: 'success',
-            message: 'Solution Master created successfully',
+            message: 'subSolution created successfully',
             data: newSubSolutionMaster,
         });
     });

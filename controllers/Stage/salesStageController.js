@@ -101,9 +101,14 @@ class SalesStageController {
 
     // Check is it valid change (1 step ahead or 1 step back);
 
+    static fetchAllStages = async()=>{
+        const salesStageMasters = await SalesStageModel.find();
+        return salesStageMasters;
+    }
+
     // Get all SalesStageMasters
     static getAllSalesStage = catchAsyncError(async (req, res, next) => {
-        const salesStageMasters = await SalesStageModel.find();
+        const salesStageMasters = await this.fetchAllStages()
         res.status(200).json({
             status: 'success',
             message: 'All Sales Stage Masters retrieved successfully',

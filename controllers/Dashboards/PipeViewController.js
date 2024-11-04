@@ -185,10 +185,8 @@ import StageHistoryModel from "../../models/HistoryModels/StageHistoryModel.js";
 import { getFilterOptions } from "../../utils/searchOptions.js";
 
 class PipeViewController {
-  static getPipeView = catchAsyncError(async (req, res, next) => {
-    console.log("pipe view");
 
-    // Get the filter options from query parameters
+  static generatePipeView = async(req, res, next)=>{
     const filterOptions =  getFilterOptions(req.query);
     console.log("filter", filterOptions);
 
@@ -347,7 +345,16 @@ const applyFilters = (opportunities) => {
     pipeView.proposal = applyFilters(pipeView.proposal);
     pipeView.followup = applyFilters(pipeView.followup);
     pipeView.closing = applyFilters(pipeView.closing);
+    
+    return pipeView;
 
+  }
+
+  static getPipeView = catchAsyncError(async (req, res, next) => {
+    console.log("pipe view");
+
+    // Get the filter options from query parameters
+    const pipeView = await this.generatePipeView(req, res, next);
     console.log("Final results : ", pipeView);
     // Return the pipe view
     res.status(200).json({

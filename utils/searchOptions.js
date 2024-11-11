@@ -1,4 +1,5 @@
 export const getFilterOptions = (query)=>{
+  if(!query) return {};
   const {territory, subIndustry, industry, enteredBy, client, solution} =  query;
   console.log("territory : ", territory)
   console.log("industry : , ",industry)
@@ -27,6 +28,7 @@ export const getFilterOptions = (query)=>{
 }
 
 export const getSortingOptions = (query)=>{
+  if(!query) return {};
   const {name, entry_date} = query
   console.log("getSortingOptions : ", name, entry_date )
   let sortingOptions = {entryDate : -1}

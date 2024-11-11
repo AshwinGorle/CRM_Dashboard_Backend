@@ -12,6 +12,10 @@ export const errors = {
 
     opportunity: {
         NOT_FOUND : "Opportunity not found!",
+    },
+
+    HeatMap : {
+        ALL_FIELDS_REQUIRED : "stageId, year is required!"
     }
 }
 

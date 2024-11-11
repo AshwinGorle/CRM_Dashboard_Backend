@@ -1,3 +1,7 @@
 1) Have to fix when we add client into a contact then that contact should also get inserted into that client
 
 2) fix the opportunity id when we update op in client then opId should generate in op
+
+3) implement the open opportunity in controller
+
+4) in summary view instead of typing the closing stage id and won substage id mannually fetch it from db 

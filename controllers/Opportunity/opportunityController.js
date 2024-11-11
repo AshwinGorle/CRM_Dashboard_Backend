@@ -36,7 +36,8 @@ class OpportunityController {
         salesTopLine,
         offsets,
         revenue,
-        confidenceLevel,
+        expectedWonDate,
+        confidenceLevel
       } = req.body;
       // Validate required fields
       console.log("revenue from frontend :  ", revenue);
@@ -71,6 +72,7 @@ class OpportunityController {
         salesTopLine,
         offsets,
         confidenceLevel,
+        expectedWonDate
       });
       //generating customId for Opp.
       await validateOpportunityId(req.body, newOpportunity);

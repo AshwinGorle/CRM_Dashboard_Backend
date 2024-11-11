@@ -89,6 +89,23 @@ const OpportunityMasterSchema = new mongoose.Schema({
     type : Number,
     default : 0
   },
+
+  //Expected Sales derived
+  expectedWonDate : {
+    type : Date,
+    default : null
+  },
+
+  openingDate : {
+    type : Date,
+    default : new Date(Date.now())
+  },
+  
+  closingDate : {
+    type : Date,
+    default : null
+  },
+
   stageHistory : [{
     type : mongoose.Schema.Types.ObjectId,
     ref : "StageHistory",
@@ -96,7 +113,7 @@ const OpportunityMasterSchema = new mongoose.Schema({
   }]
   //confidence * totalRevenue
 
-});
+}, {timestamps : true});
 
 const OpportunityMasterModel = new mongoose.model(
   "OpportunityMaster",

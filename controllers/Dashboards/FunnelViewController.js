@@ -359,7 +359,9 @@ class FunnelViewController{
       }
 
     static getFunnelView = catchAsyncError(async (req, res, next) => {
-        const { startDate, endDate } = req.query;
+        const { startDate = "10-01-01", endDate =  Date.now() } = req.query;
+        console.log("getFunnelView called : ", startDate, "   ", endDate);
+        req.body.particularDate = endDate;
         const pipeView = await PipeViewController.generatePipeView(req,res,next);
         const funnelStats =  this.getFunnelStateCount(pipeView);
         const conversionStats = await this.getConversionRates(startDate, endDate);

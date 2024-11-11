@@ -45,11 +45,11 @@ class SummaryViewController{
             // Return the total expected revenue and contributing opportunities array
             return result.length > 0
                 ? {
-                    totalExpectedRevenue: result[0].totalExpectedRevenue,
+                    value: result[0].totalExpectedRevenue,
                     contributingOpportunities: result[0].contributingOpportunities
                 }
                 : {
-                    totalExpectedRevenue: 0,
+                    value: 0,
                     contributingOpportunities: []
                 };
         } catch (error) {
@@ -131,7 +131,7 @@ class SummaryViewController{
           ]);
     
           return {
-            actualRevenue: actualRevenueResult.length > 0 ? actualRevenueResult[0].totalActualRevenue : 0,
+            value: actualRevenueResult.length > 0 ? actualRevenueResult[0].totalActualRevenue : 0,
             contributingOpportunities: actualRevenueResult.length > 0 ? actualRevenueResult[0].contributingOpportunities : []
           };
         } catch (error) {
@@ -157,15 +157,15 @@ class SummaryViewController{
             {
               $group: {
                 _id: null,
-                count: { $sum: 1 },
-                opportunityIds: { $push: '$_id' }
+                value: { $sum: 1 },
+                contributingOpportunities: { $push: '$_id' }
               }
             },
             {
               $project: {
                 _id: 0,
-                count: 1,
-                opportunityIds: 1
+                value: 1,
+                contributingOpportunities: 1
               }
             }
           ]);
@@ -173,7 +173,7 @@ class SummaryViewController{
           // Return the count and IDs of open opportunities or default values
           return openOpportunities.length > 0
             ? openOpportunities[0]
-            : { count: 0, opportunityIds: [] };
+            : { value: 0, contributingOpportunities: [] };
         } catch (error) {
           console.error('Error calculating open opportunities:', error);
           throw new Error('Failed to calculate open opportunities.');
@@ -217,15 +217,15 @@ class SummaryViewController{
             {
               $group: {
                 _id: null,
-                opportunityIds: { $addToSet: "$opportunity" }
+                contributingOpportunities: { $addToSet: "$opportunity" }
               }
             },
             // Project the count of won opportunities and the list of opportunity IDs
             {
               $project: {
                 _id: 0,
-                count: { $size: "$opportunityIds" },
-                opportunityIds: "$opportunityIds"
+                value: { $size: "$contributingOpportunities" },
+                contributingOpportunities: "$contributingOpportunities"
               }
             }
           ]);
@@ -362,19 +362,17 @@ class SummaryViewController{
     
         const actualRevenue = await this.getActualRevenue(fsd, fed);
         const expectedRevenue = await this.getExpectedRevenue(fsd, fed);
-        const getOpenOpportunities = await this.getOpenOpportunities(fsd, fed);
-        const getOpportunityWonCount = await this.getOpportunityWonCount(fsd, fed);
-    
-        // Calling getOpportunityDistribution without `this`
-        const getOpportunityDistribution = await SummaryViewController.getOpportunityDistribution(req, res, fed);
+        const openOpportunities = await this.getOpenOpportunities(fsd, fed);
+        const opportunityWonCount = await this.getOpportunityWonCount(fsd, fed);
+        const opportunityDistribution = await SummaryViewController.getOpportunityDistribution(req, res, fed);
     
         console.log("Actual Revenue:", actualRevenue);
         console.log("Expected Revenue:", expectedRevenue);
-        console.log("Open Opportunities:", getOpenOpportunities);
-        console.log("Opportunity Won Count:", getOpportunityWonCount);
-        console.log("Opportunity Distribution:", getOpportunityDistribution);
+        console.log("Open Opportunities:", openOpportunities);
+        console.log("Opportunity Won Count:", opportunityWonCount);
+        console.log("Opportunity Distribution:", opportunityDistribution);
     
-        return res.send({ status: "success", message: "fetched!" });
+        return res.send({ status: "success", message: "summary view fetched successfully!", data : {actualRevenue, expectedRevenue,openOpportunities, opportunityWonCount, opportunityDistribution } });
     });
     
     // Ensure `getOpportunityDistribution` uses an arrow function to bind `this`

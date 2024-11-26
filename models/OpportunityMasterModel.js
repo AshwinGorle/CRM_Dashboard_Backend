@@ -81,7 +81,7 @@ const OpportunityMasterSchema = new mongoose.Schema({
     type: Number,
     min: 0,    // Minimum value of 0
     max: 100,  // Maximum value of 100
-    default : 0
+    default : 100
   },
 
   //Expected Sales derived

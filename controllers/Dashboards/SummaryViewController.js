@@ -9,6 +9,8 @@ import PipeViewController from "./PipeViewController.js";
 import { ClientError } from "../../utils/customErrorHandler.utils.js";
 import { errors } from "../../utils/responseMessages.js";
 import { getFilterOptions } from "../../utils/searchOptions.js";
+import { formatDurationInShort, getLastDurationDates } from "../../utils/date.utils.js";
+import { appendCompareStats } from "../../utils/dashboards.utils.js";
 class SummaryViewController{
 
    
@@ -104,7 +106,7 @@ class SummaryViewController{
     
           // If no opportunities were won in the period, return 0 for actual revenue and an empty array
           if (!wonOpportunities.length || !wonOpportunities[0].wonOpportunityIds.length) {
-            return { actualRevenue: 0, contributingOpportunities: [] };
+            return { value: 0, contributingOpportunities: [] };
           }
     
           // Step 3: Calculate the total expectedSales for these "won" opportunities
@@ -129,7 +131,8 @@ class SummaryViewController{
               }
             }
           ]);
-    
+          
+          
           return {
             value: actualRevenueResult.length > 0 ? actualRevenueResult[0].totalActualRevenue : 0,
             contributingOpportunities: actualRevenueResult.length > 0 ? actualRevenueResult[0].contributingOpportunities : []
@@ -279,7 +282,7 @@ class SummaryViewController{
       return heatmapData 
     }
 
-     static getHeatMap = catchAsyncError(
+    static getHeatMap = catchAsyncError(
       async (req, res) => {
         let { year = "2024", stageId, subStageId } = req.body;
         const filterOptions = getFilterOptions(req.query);
@@ -291,7 +294,7 @@ class SummaryViewController{
         }
         return res.status(200).json({ status : "success", message : "Heat Map fetched successfully", data : heatMapData });   
       }
-     )
+    )
     //  static getHeatData = catchAsyncError( async (year, stageId, subStageId, filterOptions ) => {
     //   try {
         
@@ -354,23 +357,25 @@ class SummaryViewController{
 
     static getSummaryView = catchAsyncError(async (req, res) => {
         const { startDate = null, endDate = null } = req.body;
+        console.log("startDateFromFrontend : ", startDate);
+        console.log("endDateFromFrontend : ", endDate);
         const fsd = startDate ? new Date(startDate) : new Date("2010-01-01");
         const fed = endDate ? new Date(endDate) : new Date(Date.now());
-    
         console.log("startDate:", fsd); 
         console.log("endDate:", fed); 
-    
-        const actualRevenue = await this.getActualRevenue(fsd, fed);
+
+        const actualRevenue = await this.getActualRevenue(fsd, fed);        
         const expectedRevenue = await this.getExpectedRevenue(fsd, fed);
         const openOpportunities = await this.getOpenOpportunities(fsd, fed);
         const opportunityWonCount = await this.getOpportunityWonCount(fsd, fed);
         const opportunityDistribution = await SummaryViewController.getOpportunityDistribution(req, res, fed);
-    
+        
+        await appendCompareStats(actualRevenue, expectedRevenue, openOpportunities, opportunityWonCount, fsd, fed);
         console.log("Actual Revenue:", actualRevenue);
-        console.log("Expected Revenue:", expectedRevenue);
-        console.log("Open Opportunities:", openOpportunities);
-        console.log("Opportunity Won Count:", opportunityWonCount);
-        console.log("Opportunity Distribution:", opportunityDistribution);
+        // console.log("Expected Revenue:", expectedRevenue);
+        // console.log("Open Opportunities:", openOpportunities);
+        // console.log("Opportunity Won Count:", opportunityWonCount);
+        // console.log("Opportunity Distribution:", opportunityDistribution);
     
         return res.send({ status: "success", message: "summary view fetched successfully!", data : {actualRevenue, expectedRevenue,openOpportunities, opportunityWonCount, opportunityDistribution } });
     });

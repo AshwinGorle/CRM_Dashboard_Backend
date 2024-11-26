@@ -145,7 +145,7 @@ class FunnelViewController{
             }
         ]);
     
-        return conversionRates[0].conversionRates;
+        return conversionRates[0]?.conversionRates;
     };
     
 
@@ -359,12 +359,17 @@ class FunnelViewController{
       }
 
     static getFunnelView = catchAsyncError(async (req, res, next) => {
-        const { startDate = "10-01-01", endDate =  Date.now() } = req.query;
-        console.log("getFunnelView called : ", startDate, "   ", endDate);
-        req.body.particularDate = endDate;
+        let {particularDate} = req.body;
+        console.log("particular date frontend " , "   ", particularDate);
+        // particularDate = new Date(particularDate)
+        const startDate = new Date("10-01-01");
+        const endDate = particularDate;
+        console.log("getFunnelView called  endDate:" , "   ", endDate);
+        req.body.particularDate = particularDate;
         const pipeView = await PipeViewController.generatePipeView(req,res,next);
         const funnelStats =  this.getFunnelStateCount(pipeView);
         const conversionStats = await this.getConversionRates(startDate, endDate);
+        console.log("funnelStats : ",funnelStats);
         res.status(200).json({
             status: "success",
             message: "Funnel view retrieved successfully",

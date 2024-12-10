@@ -44,6 +44,10 @@ class AuthController {
       city = "N/A",
       state = "N/A",
       country = "N/A",
+      // for sales cham assignment purpose
+      territory,
+      solution,
+      industry
     } = req.body;
 
     if (password !== password_confirmation) {
@@ -85,6 +89,9 @@ class AuthController {
       }
 
       const newUser = new UserModel({
+        territory,
+        industry,
+        solution,
         firstName,
         lastName,
         phone,

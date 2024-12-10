@@ -30,3 +30,21 @@ export const formatDurationInShort = (days, prefix) => {
     return { startDate: newStartDate, endDate: newEndDate };
   };
   
+
+ export const myViewFilter = (user, opportunity) => {
+  console.log("client---------------------------------------------------", opportunity.client);
+    console.log(user.solution)
+    const mySolution = user.solution
+    const myTerritory = user.territory
+    const myIndustry = user.industry
+    
+    const solutionCheck =  mySolution.includes(opportunity?.solution?.toString());
+    const industryCheck =  myIndustry.includes(opportunity?.client?.industry?.toString());
+    const territoryCheck = myTerritory.includes(opportunity?.client?.territory?.toString());
+    
+    console.log("checks : " , solutionCheck , industryCheck , territoryCheck)
+
+    return (
+      solutionCheck && industryCheck && territoryCheck
+    )
+ }

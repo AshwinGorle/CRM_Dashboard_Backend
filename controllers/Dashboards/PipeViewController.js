@@ -5,11 +5,14 @@ import { catchAsyncError } from "../../middlewares/catchAsyncError.middleware.js
 import StageHistoryModel from "../../models/HistoryModels/StageHistoryModel.js";
 import { getFilterOptions } from "../../utils/searchOptions.js";
 import applyFilters from "../../utils/applyFilters.js";
+import mongoose from "mongoose";
+import { myViewFilter } from "../../utils/date.utils.js";
 class PipeViewController {
-
   static generatePipeView = async(req, res, next)=>{
+    const myView = req.query.myView == "true"
+    console.log("request --------------", req.query);
     const filterOptions =  getFilterOptions(req?.query);
-    console.log("filter", filterOptions);
+    // console.log("filter", filterOptions);
 
     const { particularDate } = req.body; // Expected to be a timestamp
     if (!particularDate) throw new Error("Particular date is required.");
@@ -95,35 +98,9 @@ class PipeViewController {
       }
     ]);
 
-    // Helper function to filter opportunities based on criteria
-    // Apply filter logic
-// Apply filter logic
-// const applyFilters = (opportunities, filterOptions) => {
-//   return opportunities.filter((record) => {
-//       const { client } = record;
-//       console.log("industry array : ", filterOptions?.industry)
-//       console.log("opp industry : ", client?.industry)
-//       // Check if client exists before checking its properties
-//       const isTerritoryValid = !filterOptions.territory || (client && client.territory && filterOptions.territory.includes(client.territory.toString()));
-//       const isIndustryValid = !filterOptions.industry || (client && client.industry && filterOptions.industry.includes(client.industry.toString()));
-//       const isSubIndustryValid = !filterOptions.subIndustry || (client && client.subIndustry && filterOptions.subIndustry.includes(client.subIndustry.toString()));
-
-//       // Check enteredBy and solution in the main record
-//       const isEnteredByValid = !filterOptions.enteredBy || (record.enteredBy && filterOptions.enteredBy.includes(record.enteredBy._id.toString()));
-//       const isSolutionValid = !filterOptions.solution || (record.solution && filterOptions.solution.includes(record.solution.toString()));
-//       console.log("isIndustryValid : ", isIndustryValid);
-//       console.log("isSubIndustryValid : ", isSubIndustryValid);
-//       console.log("isEnteredByValid : ", isEnteredByValid);
-//       console.log("isSolutionValid : ", isSolutionValid);
-//       console.log("Filter result : ", isTerritoryValid && isIndustryValid && isSubIndustryValid && isEnteredByValid && isSolutionValid)
-//       return isTerritoryValid && isIndustryValid && isSubIndustryValid && isEnteredByValid && isSolutionValid;
-//   });
-// };
-
-
 
     // Iterate through results and map them to corresponding stages
-    opportunitiesInStages.forEach((record) => {
+      opportunitiesInStages.forEach((record) => {
       const { stage, opportunity, client, enteredBy } = record;
 
       // Attach client and enteredBy details to the opportunity
@@ -134,28 +111,32 @@ class PipeViewController {
         lastName: enteredBy?.lastName,
         _id : enteredBy?._id,
       };
-
-      switch (stage.label.toLowerCase()) {
-        case "lead":
-          pipeView.lead.push(opportunity);
-          break;
-        case "prospecting":
-          pipeView.prospect.push(opportunity);
-          break;
-        case "qualification":
-          pipeView.qualification.push(opportunity);
-          break;
-        case "proposal":
-          pipeView.proposal.push(opportunity);
-          break;
-        case "followup":
-          pipeView.followup.push(opportunity);
-          break;
-        case "closing":
-          pipeView.closing.push(opportunity);
-          break;
-        default:
-          break;
+      
+      // for my view implementation
+      console.log("My view  : ", myView)
+      if( !myView || myViewFilter(req.user,opportunity)){
+        switch (stage.label.toLowerCase()) {
+          case "lead":
+             pipeView.lead.push(opportunity);
+            break;
+          case "prospecting":
+            pipeView.prospect.push(opportunity);
+            break;
+          case "qualification":
+            pipeView.qualification.push(opportunity);
+            break;
+          case "proposal":
+            pipeView.proposal.push(opportunity);
+            break;
+          case "followup":
+            pipeView.followup.push(opportunity);
+            break;
+          case "closing":
+            pipeView.closing.push(opportunity);
+            break;
+          default:
+            break;
+        }
       }
     });
 
@@ -166,9 +147,7 @@ class PipeViewController {
     pipeView.proposal = applyFilters(pipeView.proposal, filterOptions);
     pipeView.followup = applyFilters(pipeView.followup, filterOptions);
     pipeView.closing = applyFilters(pipeView.closing, filterOptions);
-    
     return pipeView;
-
   }
 
   static getPipeView = catchAsyncError(async (req, res, next) => {
@@ -176,7 +155,7 @@ class PipeViewController {
 
     // Get the filter options from query parameters
     const pipeView = await this.generatePipeView(req, res, next);
-    console.log("Final results : ", pipeView);
+    // console.log("Final results : ", pipeView);
     // Return the pipe view
     res.status(200).json({
       status: "success",

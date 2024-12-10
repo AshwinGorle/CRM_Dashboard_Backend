@@ -1,21 +1,21 @@
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 const AddressSchema = new mongoose.Schema({
-  city : {
-   type : String,
+  city: {
+    type: String,
   },
-  state : {
-   type : String,
+  state: {
+    type: String,
   },
-  country : {
-   type : String
-  }
-})
+  country: {
+    type: String,
+  },
+});
 const UserSchema = new mongoose.Schema(
   {
-    avatar : {
-      type : String,
-      default : ''
+    avatar: {
+      type: String,
+      default: "",
     },
     firstName: {
       type: String,
@@ -44,8 +44,8 @@ const UserSchema = new mongoose.Schema(
       required: true,
       minlength: 6,
     },
-    DOB : {
-     type : Date
+    DOB: {
+      type: Date,
     },
     gender: {
       type: String,
@@ -57,17 +57,17 @@ const UserSchema = new mongoose.Schema(
     //   enum: ["viewer", "admin", "user", "superuser"],
     //   default: "viewer",
     // },
-    role : {
-      type : mongoose.Schema.Types.ObjectId,
-      ref : 'Role'
+    role: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Role",
     },
 
     isVerified: {
       type: Boolean,
       default: false,
     },
-    address : {
-     type : AddressSchema
+    address: {
+      type: AddressSchema,
     },
     otp: {
       type: Number,
@@ -76,6 +76,19 @@ const UserSchema = new mongoose.Schema(
     otpExpiresAt: {
       type: Date,
       default: null,
+    },
+    // for assign territory industry and solution to a sales champ
+    territory: {
+      type: [{ type: mongoose.Schema.Types.ObjectId, ref: "Territory" }],
+      default: [null], // Default indicates access to all territories.
+    },
+    industry: {
+      type: [{ type: mongoose.Schema.Types.ObjectId, ref: "Industry" }],
+      default: [null], // Default indicates access to all industries.
+    },
+    solution: {
+      type: [{ type: mongoose.Schema.Types.ObjectId, ref: "Solution" }],
+      default: [null], // Default indicates access to all solutions.
     },
     teams: [
       {

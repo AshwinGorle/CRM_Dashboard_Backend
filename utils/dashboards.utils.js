@@ -50,3 +50,10 @@ export const appendCompareStats = async (
   opportunityWonCount["compare"] = compare;
 
 };
+
+export const getMyViewFilter = (user) => {
+  const mySolution = user.solution
+  const myTerritory = user.territory
+  const myIndustry = user.industry
+  return { mySolution, myTerritory, myIndustry }
+}

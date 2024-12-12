@@ -10,7 +10,7 @@ import { myViewFilter } from "../../utils/date.utils.js";
 class PipeViewController {
   static generatePipeView = async(req, res, next)=>{
     const myView = req.query.myView == "true"
-    console.log("request --------------", req.query);
+  
     const filterOptions =  getFilterOptions(req?.query);
     // console.log("filter", filterOptions);
 

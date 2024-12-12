@@ -32,7 +32,6 @@ export const formatDurationInShort = (days, prefix) => {
   
 
  export const myViewFilter = (user, opportunity) => {
-  console.log("client---------------------------------------------------", opportunity.client);
     console.log(user.solution)
     const mySolution = user.solution
     const myTerritory = user.territory

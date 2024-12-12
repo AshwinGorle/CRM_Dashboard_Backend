@@ -162,10 +162,10 @@ class FunnelViewController{
     static getConversionRates = async (startDate = new Date("2010-01-01"), endDate = Date.now(), req) => {
         const filterOptions = getFilterOptions(req?.query); // Extract filter options from query
         console.log("filter ----", filterOptions);
-    
+        
         // Fetch stages and sort them
         const stages = await SalesStageController.fetchAllStages();
-        stages.sort((a, b) => a.level - b.level);
+        stages.sort((a, b) => a.level - b.level);   
     
         // Helper function to build a match query with filters
         const buildFilterQuery = (filterOptions) => {
@@ -173,7 +173,7 @@ class FunnelViewController{
     
             // Convert string IDs to ObjectIds (for proper MongoDB comparison)
             const toObjectIdArray = (array) => {
-                return array.map(id => mongoose.Types.ObjectId(id));
+                return array.map(id => new mongoose.Types.ObjectId(id));
             };
     
             // Apply filters to the query
@@ -256,7 +256,7 @@ class FunnelViewController{
                 { $unwind: "$opportunity" },
                 {
                     $lookup: {
-                        from: "clients",
+                        from: "clientmasters",
                         localField: "opportunity.client",
                         foreignField: "_id",
                         as: "opportunity.client"
@@ -299,7 +299,6 @@ class FunnelViewController{
  
     static getFunnelView = catchAsyncError(async (req, res, next) => {
         let {particularDate} = req.body;
-        console.log("particular date frontend " , "   ", particularDate);
         const startDate = new Date("10-01-01");
         const endDate = particularDate;
         console.log("getFunnelView called  endDate:" , "   ", endDate);

@@ -11,13 +11,17 @@ class SalesSubStageController {
 
     static handleSubStageChange = async (newSalesSubStageId, opportunityId, updateDate, session)=>{
         // Gathering required info
+        const wonSubStageId = "670e81150a2c8e8563f16b55"  // only yha ye id string me chahiye !! 
         const allSalesSubStages = await SalesSubStageModel.find({});
         const allSalesStages = await SalesStageModel.find({});
         
         // Validate provided subStageId 
         if(!allSalesSubStages.find(subStage=>subStage._id.toString() == newSalesSubStageId)) throw new ClientError ("handleSubStageChange",errors.subStage.INVALID_STAGE);
         const opportunity = await OpportunityMasterModel.findById(opportunityId).populate("stageHistory stageHistory.stage").session(session);
+
+        //if this is the won sub stage then we have to close the opportunity
         
+
         // If Already in the given sub stage do nothing
         if(newSalesSubStageId == opportunity.salesSubStage.toString()){
             console.log("No sub stage change needed");

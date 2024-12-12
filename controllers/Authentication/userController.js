@@ -57,7 +57,7 @@ static generateAlphabetPassword = (length = 4) =>
   static updateUser = catchAsyncError(async (req, res, next) => {
     const id = req.params.id;
     const updateData = req.body;
-    console.log("update user data to update : ", updateData)
+
     const user = await UserModel.findById(id);
     if (!user) throw new ServerError("NotFound", "user");
     Object.keys(updateData).forEach((key) => {

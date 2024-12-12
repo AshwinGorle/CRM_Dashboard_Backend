@@ -4,11 +4,7 @@ const homePage = (req,res)=>{
             message : "shree ganesh"
         })
         // Your function logic
-        console.log("home page provided for testing");
-        console.log("home page provided for testing");
-        console.log("home page provided for testing");
-        console.log("home page provided for testing");
-        console.log("home page provided for testing");
+       
       } catch (error) {
         console.error('Error occurred:', error);
         return res.send({ message: 'Internal Server Error', error });

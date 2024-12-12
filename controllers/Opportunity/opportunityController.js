@@ -217,7 +217,7 @@ class OpportunityController {
       let updateData = req.body;
       console.log("updated op data : -----", updateData);
      
-      let opportunity = await OpportunityMasterModel.findById(id);
+      let opportunity = await OpportunityMasterModel.findById(id).session(session);
       if (!opportunity) throw new ServerError("Update Opportunity", errors.opportunity.NOT_FOUND);
 
       // await validateOpportunityId(updateData, opportunity);
@@ -232,13 +232,17 @@ class OpportunityController {
         await SalesStageController.handleStageChange(updateData.salesStage, opportunity._id,  updateDate, session )
       }
       
+      const updateDate  = updateData.updateDate ? new Date(updateData.updateDate) : Date.now();
       if(updateData.salesSubStage){
         console.log("Entering in sub stage change");
         const updateDate  = updateData.updateDate ? new Date(updateData.updateDate) : Date.now();
         await SalesSubStageController.handleSubStageChange(updateData.salesSubStage, opportunity._id, updateDate, session)
       }
-
-
+      
+      // if the substage is won then have to close the opportunity
+      const wonSubStageId = "670e81150a2c8e8563f16b55"  // only yha ye id string me chahiye !! 
+      if(updateData.salesSubStage == wonSubStageId ) opportunity.closingDate = updateDate
+      
       // If update contains revenue handle it
       if (updateData.revenue) {
         await RevenueController.handleRevenue(

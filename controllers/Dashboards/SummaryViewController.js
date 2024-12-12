@@ -10,7 +10,10 @@ import { ClientError } from "../../utils/customErrorHandler.utils.js";
 import { errors } from "../../utils/responseMessages.js";
 import { getFilterOptions } from "../../utils/searchOptions.js";
 
-import { appendCompareStats, getMyViewFilter } from "../../utils/dashboards.utils.js";
+import {
+  appendCompareStats,
+  getMyViewFilter,
+} from "../../utils/dashboards.utils.js";
 class SummaryViewController {
   // static async getExpectedRevenue(startDate, endDate, myView, mySIT) {
   //   const {mySolution, myIndustry, myTerritory} = mySIT;
@@ -43,7 +46,6 @@ class SummaryViewController {
   //       },
   //     ]);
 
-
   //     // Return the total expected revenue and contributing opportunities array
   //     return result.length > 0
   //       ? {
@@ -60,12 +62,11 @@ class SummaryViewController {
   //   }
   // }
 
-  
   static async getExpectedRevenue(startDate, endDate, myView, mySIT) {
-    const mySolution = mySIT?.mySolution 
-    const myIndustry = mySIT?.myIndustry
-    const myTerritory = mySIT?.myTerritory
-  
+    const mySolution = mySIT?.mySolution;
+    const myIndustry = mySIT?.myIndustry;
+    const myTerritory = mySIT?.myTerritory;
+    console.log("sdf edf expected sales", startDate, endDate);
     try {
       // Step 1: Calculate the total expected revenue without myView filtering
       const result = await OpportunityMasterModel.aggregate([
@@ -92,16 +93,24 @@ class SummaryViewController {
           },
         },
       ]);
-  
-      const totalExpectedRevenue = result.length > 0 ? result[0].totalExpectedRevenue : 0;
-      const contributingOpportunities = result.length > 0 ? result[0].contributingOpportunities : [];
-  
+
+      const totalExpectedRevenue =
+        result.length > 0 ? result[0].totalExpectedRevenue : 0;
+      const contributingOpportunities =
+        result.length > 0 ? result[0].contributingOpportunities : [];
+
+      console.log(
+        "expected revenue contributing --------",
+        contributingOpportunities,
+        totalExpectedRevenue
+      );
+
       if (!myView) {
         // If myView is false, return the total expected revenue and opportunities
         return { value: totalExpectedRevenue, contributingOpportunities };
       }
-      console.log("myview is true ------")
-  
+      console.log("myview is true ------");
+
       // Step 2: Apply myView filtering
       const myViewResult = await OpportunityMasterModel.aggregate([
         {
@@ -120,9 +129,15 @@ class SummaryViewController {
         { $unwind: "$client" }, // Ensure `client` is populated
         {
           $match: {
-            solution: { $in: mySolution.map((id) => mongoose.Types.ObjectId(id)) },
-            "client.industry": { $in: myIndustry.map((id) => mongoose.Types.ObjectId(id)) },
-            "client.territory": { $in: myTerritory.map((id) => mongoose.Types.ObjectId(id)) },
+            solution: {
+              $in: mySolution.map((id) => new mongoose.Types.ObjectId(id)),
+            },
+            "client.industry": {
+              $in: myIndustry.map((id) => new mongoose.Types.ObjectId(id)),
+            },
+            "client.territory": {
+              $in: myTerritory.map((id) => new mongoose.Types.ObjectId(id)),
+            },
           },
         },
         {
@@ -140,11 +155,16 @@ class SummaryViewController {
           },
         },
       ]);
-  
-      const filteredRevenue = myViewResult.length > 0 ? myViewResult[0].totalExpectedRevenue : 0;
+
+      // console.log(" my expected revenue contributing --------", myViewResult[0].contributingOpportunities )
+
+      const filteredRevenue =
+        myViewResult.length > 0 ? myViewResult[0].totalExpectedRevenue : 0;
       const filteredOpportunities =
-        myViewResult.length > 0 ? myViewResult[0].contributingOpportunities : [];
-  
+        myViewResult.length > 0
+          ? myViewResult[0].contributingOpportunities
+          : [];
+
       // Step 3: Return the appropriate result
       return {
         value: filteredRevenue,
@@ -154,8 +174,7 @@ class SummaryViewController {
       console.error("Error calculating expected revenue:", error);
       throw new Error("Failed to calculate expected revenue.");
     }
-  } 
-  
+  }
 
   // my view easy
   // static async getActualRevenue(startDate, endDate, myView, mySIT) {
@@ -256,16 +275,20 @@ class SummaryViewController {
   //     throw new Error("Failed to calculate actual revenue.");
   //   }
   // }
-  
+
   static async getActualRevenue(startDate, endDate, myView, mySIT) {
-   const mySolution = mySIT?.mySolution 
-   const myIndustry = mySIT?.myIndustry
-   const myTerritory = mySIT?.myTerritory
-  
+    const mySolution = mySIT?.mySolution;
+    const myIndustry = mySIT?.myIndustry;
+    const myTerritory = mySIT?.myTerritory;
+
     try {
-      const closingStageId = new mongoose.Types.ObjectId("670e7df5f5e783c1a47cd499");
-      const wonSubStageId = new mongoose.Types.ObjectId("670e81150a2c8e8563f16b55");
-  
+      const closingStageId = new mongoose.Types.ObjectId(
+        "670e7df5f5e783c1a47cd499"
+      );
+      const wonSubStageId = new mongoose.Types.ObjectId(
+        "670e81150a2c8e8563f16b55"
+      );
+
       // Step 1: Find StageHistory documents with the closing stage within the given date range
       const wonOpportunities = await StageHistoryModel.aggregate([
         {
@@ -304,13 +327,16 @@ class SummaryViewController {
           },
         },
       ]);
-  
-      if (!wonOpportunities.length || !wonOpportunities[0].wonOpportunityIds.length) {
+
+      if (
+        !wonOpportunities.length ||
+        !wonOpportunities[0].wonOpportunityIds.length
+      ) {
         return { value: 0, contributingOpportunities: [] };
       }
-  
+
       const wonOpportunityIds = wonOpportunities[0].wonOpportunityIds;
-  
+
       // Step 2: Calculate total actual revenue without myView filtering
       const actualRevenueResult = await OpportunityMasterModel.aggregate([
         {
@@ -333,17 +359,21 @@ class SummaryViewController {
           },
         },
       ]);
-  
+
       const totalActualRevenue =
-        actualRevenueResult.length > 0 ? actualRevenueResult[0].totalActualRevenue : 0;
+        actualRevenueResult.length > 0
+          ? actualRevenueResult[0].totalActualRevenue
+          : 0;
       const contributingOpportunities =
-        actualRevenueResult.length > 0 ? actualRevenueResult[0].contributingOpportunities : [];
+        actualRevenueResult.length > 0
+          ? actualRevenueResult[0].contributingOpportunities
+          : [];
       console.log("myView in actual revenue ---------------", myView);
       if (!myView) {
         // If myView is false, return the total actual revenue and opportunities
         return { value: totalActualRevenue, contributingOpportunities };
       }
-      console.log('after--------')
+      console.log("after--------");
       // Step 3: Apply myView filtering
       const myViewResult = await OpportunityMasterModel.aggregate([
         {
@@ -362,9 +392,15 @@ class SummaryViewController {
         { $unwind: "$client" },
         {
           $match: {
-            solution: { $in: mySolution.map((id) => mongoose.Types.ObjectId(id)) },
-            "client.industry": { $in: myIndustry.map((id) => mongoose.Types.ObjectId(id)) },
-            "client.territory": { $in: myTerritory.map((id) => mongoose.Types.ObjectId(id)) },
+            solution: {
+              $in: mySolution.map((id) => new mongoose.Types.ObjectId(id)),
+            },
+            "client.industry": {
+              $in: myIndustry.map((id) => new mongoose.Types.ObjectId(id)),
+            },
+            "client.territory": {
+              $in: myTerritory.map((id) => new mongoose.Types.ObjectId(id)),
+            },
           },
         },
         {
@@ -382,11 +418,14 @@ class SummaryViewController {
           },
         },
       ]);
-  
-      const filteredRevenue = myViewResult.length > 0 ? myViewResult[0].totalActualRevenue : 0;
+
+      const filteredRevenue =
+        myViewResult.length > 0 ? myViewResult[0].totalActualRevenue : 0;
       const filteredOpportunities =
-        myViewResult.length > 0 ? myViewResult[0].contributingOpportunities : [];
-  
+        myViewResult.length > 0
+          ? myViewResult[0].contributingOpportunities
+          : [];
+
       // Step 4: Return the appropriate result
       return {
         value: filteredRevenue,
@@ -397,11 +436,10 @@ class SummaryViewController {
       throw new Error("Failed to calculate actual revenue.");
     }
   }
-  
 
   //myview easy
   // static async getOpenOpportunities(startDate, endDate, myView, mySIT) {
-  //   const mySolution = mySIT?.mySolution 
+  //   const mySolution = mySIT?.mySolution
   //  const myIndustry = mySIT?.myIndustry
   //  const myTerritory = mySIT?.myTerritory
   //   try {
@@ -433,8 +471,6 @@ class SummaryViewController {
   //       },
   //     ]);
 
-
-
   //     // Return the count and IDs of open opportunities or default values
   //     return openOpportunities.length > 0
   //       ? openOpportunities[0]
@@ -449,24 +485,24 @@ class SummaryViewController {
     const mySolution = mySIT?.mySolution;
     const myIndustry = mySIT?.myIndustry;
     const myTerritory = mySIT?.myTerritory;
-  
+
     try {
       // Step 1: Aggregate open opportunities within the specified date range
       const openOpportunities = await OpportunityMasterModel.aggregate([
         {
           $match: {
-            openingDate: { $lte: new Date(endDate) },
+            openingDate: { $lte: new Date(endDate) }, // Opportunity opens on or before the end date
             $or: [
-              { closingDate: { $gte: new Date(startDate) } },
-              { closingDate: null },
+              { closingDate: { $gte: new Date(endDate) } }, // Opportunity closes after or on the start date
+              { closingDate: null }, // Opportunity has no closing date
             ],
           },
         },
         {
           $group: {
             _id: null,
-            value: { $sum: 1 },
-            contributingOpportunities: { $push: "$_id" },
+            value: { $sum: 1 }, // Count the number of matching opportunities
+            contributingOpportunities: { $push: "$_id" }, // Collect their IDs
           },
         },
         {
@@ -477,20 +513,24 @@ class SummaryViewController {
           },
         },
       ]);
-  
+      
+
       // If no open opportunities exist, return default values
-      if (!openOpportunities.length || !openOpportunities[0].contributingOpportunities.length) {
+      if (
+        !openOpportunities.length ||
+        !openOpportunities[0].contributingOpportunities.length
+      ) {
         return { value: 0, contributingOpportunities: [] };
       }
-  
+
       const allOpenOpportunities = openOpportunities[0];
-      const openOpportunityIds = allOpenOpportunities.contributingOpportunities;
-  
+      const openOpportunityIds = allOpenOpportunities?.contributingOpportunities;
+      console.log("open opportunity before my view ", openOpportunityIds)
       if (!myView) {
         // If myView is false, return the total open opportunities without filtering
         return allOpenOpportunities;
       }
-  
+
       // Step 2: Filter open opportunities by mySolution, myIndustry, and myTerritory
       const filteredOpportunities = await OpportunityMasterModel.aggregate([
         {
@@ -509,9 +549,15 @@ class SummaryViewController {
         { $unwind: "$client" }, // Unwind the client data for access to its fields
         {
           $match: {
-            solution: { $in: mySolution.map((id) => mongoose.Types.ObjectId(id)) },
-            "client.industry": { $in: myIndustry.map((id) => mongoose.Types.ObjectId(id)) },
-            "client.territory": { $in: myTerritory.map((id) => mongoose.Types.ObjectId(id)) },
+            solution: {
+              $in: mySolution.map((id) => new mongoose.Types.ObjectId(id)),
+            },
+            "client.industry": {
+              $in: myIndustry.map((id) => new mongoose.Types.ObjectId(id)),
+            },
+            "client.territory": {
+              $in: myTerritory.map((id) => new mongoose.Types.ObjectId(id)),
+            },
           },
         },
         {
@@ -529,7 +575,7 @@ class SummaryViewController {
           },
         },
       ]);
-  
+
       // Return the filtered result
       return filteredOpportunities.length > 0
         ? filteredOpportunities[0]
@@ -539,8 +585,7 @@ class SummaryViewController {
       throw new Error("Failed to calculate open opportunities.");
     }
   }
-  
- 
+
   // my view easy
   // static async getOpportunityWonCount(startDate, endDate) {
   //   try {
@@ -606,11 +651,127 @@ class SummaryViewController {
   //   }
   // }
 
+  // static async getOpportunityWonCount(startDate, endDate, myView, mySIT) {
+  //   const mySolution = mySIT?.mySolution;
+  //   const myIndustry = mySIT?.myIndustry;
+  //   const myTerritory = mySIT?.myTerritory;
+
+  //   try {
+  //     // Define the ObjectId for the closing stage and won sub-stage
+  //     const closingStageId = new mongoose.Types.ObjectId(
+  //       "670e7df5f5e783c1a47cd499"
+  //     );
+  //     const wonSubStageId = new mongoose.Types.ObjectId(
+  //       "670e81150a2c8e8563f16b55"
+  //     );
+
+  //     // Step 1: Find all opportunities that were won within the date range
+  //     const wonOpportunities = await StageHistoryModel.aggregate([
+  //       {
+  //         $match: {
+  //           stage: closingStageId,
+  //           entryDate: { $gte: new Date(startDate), $lte: new Date(endDate) },
+  //         },
+  //       },
+  //       {
+  //         $lookup: {
+  //           from: "substagehistories", // Collection for SubStageHistory
+  //           localField: "subStageHistory",
+  //           foreignField: "_id",
+  //           as: "subStageHistoryDetails",
+  //         },
+  //       },
+  //       {
+  //         $match: {
+  //           "subStageHistoryDetails.subStage": wonSubStageId,
+  //           "subStageHistoryDetails.entryDate": {
+  //             $gte: new Date(startDate),
+  //             $lte: new Date(endDate),
+  //           },
+  //         },
+  //       },
+  //       {
+  //         $group: {
+  //           _id: null,
+  //           contributingOpportunities: { $addToSet: "$opportunity" },
+  //         },
+  //       },
+  //       {
+  //         $project: {
+  //           _id: 0,
+  //           value: { $size: "$contributingOpportunities" },
+  //           contributingOpportunities: "$contributingOpportunities",
+  //         },
+  //       },
+  //     ]);
+
+  //     // If no won opportunities exist, return default values
+  //     if (!wonOpportunities.length || !wonOpportunities[0].contributingOpportunities.length) {
+  //       return { count: 0, opportunityIds: [] };
+  //     }
+
+  //     const allWonOpportunities = wonOpportunities[0];
+  //     const wonOpportunityIds = allWonOpportunities.contributingOpportunities;
+
+  //     if (!myView) {
+  //       // If myView is false, return all won opportunities without filtering
+  //       return { count: allWonOpportunities.value, opportunityIds: wonOpportunityIds };
+  //     }
+
+  //     // Step 2: Apply myView filtering
+  //     const filteredOpportunities = await OpportunityMasterModel.aggregate([
+  //       {
+  //         $match: {
+  //           _id: { $in: wonOpportunityIds }, // Only consider the previously identified won opportunities
+  //         },
+  //       },
+  //       {
+  //         $lookup: {
+  //           from: "clients", // Collection for clients
+  //           localField: "client",
+  //           foreignField: "_id",
+  //           as: "client",
+  //         },
+  //       },
+  //       { $unwind: "$client" }, // Unwind the client data for filtering
+  //       {
+  //         $match: {
+  //           solution: { $in: mySolution.map((id) => new mongoose.Types.ObjectId(id)) },
+  //           "client.industry": { $in: myIndustry.map((id) => new mongoose.Types.ObjectId(id)) },
+  //           "client.territory": { $in: myTerritory.map((id) => new mongoose.Types.ObjectId(id)) },
+  //         },
+  //       },
+  //       {
+  //         $group: {
+  //           _id: null,
+  //           value: { $sum: 1 },
+  //           contributingOpportunities: { $push: "$_id" },
+  //         },
+  //       },
+  //       {
+  //         $project: {
+  //           _id: 0,
+  //           value: 1,
+  //           contributingOpportunities: 1,
+  //         },
+  //       },
+  //     ]);
+
+  //     // Return the filtered result
+  //     return filteredOpportunities.length > 0
+  //       ? { count: filteredOpportunities[0].value, opportunityIds: filteredOpportunities[0].contributingOpportunities }
+  //       : { count: 0, opportunityIds: [] };
+  //   } catch (error) {
+  //     console.error("Error calculating won opportunities:", error);
+  //     throw new Error("Failed to calculate won opportunities.");
+  //   }
+  // }
+
   static async getOpportunityWonCount(startDate, endDate, myView, mySIT) {
     const mySolution = mySIT?.mySolution;
     const myIndustry = mySIT?.myIndustry;
     const myTerritory = mySIT?.myTerritory;
-  
+
     try {
       // Define the ObjectId for the closing stage and won sub-stage
       const closingStageId = new mongoose.Types.ObjectId(
@@ -619,23 +780,28 @@ class SummaryViewController {
       const wonSubStageId = new mongoose.Types.ObjectId(
         "670e81150a2c8e8563f16b55"
       );
-  
-      // Step 1: Find all opportunities that were won within the date range
+
+      // Step 1: Aggregate to find won opportunities
       const wonOpportunities = await StageHistoryModel.aggregate([
+        // Match entries in the closing stage within the date range
         {
           $match: {
             stage: closingStageId,
             entryDate: { $gte: new Date(startDate), $lte: new Date(endDate) },
           },
         },
+        // Lookup details for subStageHistory
         {
           $lookup: {
-            from: "substagehistories", // Collection for SubStageHistory
+            from: "substagehistories", // SubStageHistory collection
             localField: "subStageHistory",
             foreignField: "_id",
             as: "subStageHistoryDetails",
           },
         },
+        // Unwind the subStageHistoryDetails array to evaluate individual entries
+        { $unwind: "$subStageHistoryDetails" },
+        // Match entries in the "won" sub-stage within the date range
         {
           $match: {
             "subStageHistoryDetails.subStage": wonSubStageId,
@@ -645,44 +811,55 @@ class SummaryViewController {
             },
           },
         },
+        // Group by opportunity ID to ensure each opportunity is counted only once
+        {
+          $group: {
+            _id: "$opportunity",
+          },
+        },
+        // Collect the count of opportunities and their IDs
         {
           $group: {
             _id: null,
-            contributingOpportunities: { $addToSet: "$opportunity" },
+            value: { $sum: 1 },
+            contributingOpportunities: { $push: "$_id" },
           },
         },
         {
           $project: {
             _id: 0,
-            value: { $size: "$contributingOpportunities" },
-            contributingOpportunities: "$contributingOpportunities",
+            value: 1,
+            contributingOpportunities: 1,
           },
         },
       ]);
-  
+
       // If no won opportunities exist, return default values
-      if (!wonOpportunities.length || !wonOpportunities[0].contributingOpportunities.length) {
-        return { count: 0, opportunityIds: [] };
+      if (!wonOpportunities.length) {
+        return { value: 0, opportunityIds: [] };
       }
-  
+
       const allWonOpportunities = wonOpportunities[0];
       const wonOpportunityIds = allWonOpportunities.contributingOpportunities;
-  
+
       if (!myView) {
         // If myView is false, return all won opportunities without filtering
-        return { count: allWonOpportunities.value, opportunityIds: wonOpportunityIds };
+        return {
+          value: allWonOpportunities.value,
+          opportunityIds: wonOpportunityIds,
+        };
       }
-  
+
       // Step 2: Apply myView filtering
       const filteredOpportunities = await OpportunityMasterModel.aggregate([
         {
           $match: {
-            _id: { $in: wonOpportunityIds }, // Only consider the previously identified won opportunities
+            _id: { $in: wonOpportunityIds }, // Only consider previously identified won opportunities
           },
         },
         {
           $lookup: {
-            from: "clients", // Collection for clients
+            from: "clientmasters", // Client collection
             localField: "client",
             foreignField: "_id",
             as: "client",
@@ -691,9 +868,15 @@ class SummaryViewController {
         { $unwind: "$client" }, // Unwind the client data for filtering
         {
           $match: {
-            solution: { $in: mySolution.map((id) => mongoose.Types.ObjectId(id)) },
-            "client.industry": { $in: myIndustry.map((id) => mongoose.Types.ObjectId(id)) },
-            "client.territory": { $in: myTerritory.map((id) => mongoose.Types.ObjectId(id)) },
+            solution: {
+              $in: mySolution.map((id) => new mongoose.Types.ObjectId(id)),
+            },
+            "client.industry": {
+              $in: myIndustry.map((id) => new mongoose.Types.ObjectId(id)),
+            },
+            "client.territory": {
+              $in: myTerritory.map((id) => new mongoose.Types.ObjectId(id)),
+            },
           },
         },
         {
@@ -711,17 +894,19 @@ class SummaryViewController {
           },
         },
       ]);
-  
+
       // Return the filtered result
       return filteredOpportunities.length > 0
-        ? { count: filteredOpportunities[0].value, opportunityIds: filteredOpportunities[0].contributingOpportunities }
-        : { count: 0, opportunityIds: [] };
+        ? {
+            value: filteredOpportunities[0].value,
+            opportunityIds: filteredOpportunities[0].contributingOpportunities,
+          }
+        : { value: 0, opportunityIds: [] };
     } catch (error) {
       console.error("Error calculating won opportunities:", error);
       throw new Error("Failed to calculate won opportunities.");
     }
   }
-  
 
   static getMonthlyRange = (year, month) => {
     const start = new Date(year, month, 1);
@@ -729,7 +914,14 @@ class SummaryViewController {
     return { start, end };
   };
 
-  static getHeatMapData = async (year, stageId, subStageId, filterOptions, myView, mySIT) => {
+  static getHeatMapData = async (
+    year,
+    stageId,
+    subStageId,
+    filterOptions,
+    myView,
+    mySIT
+  ) => {
     const mySolution = mySIT?.mySolution;
     const myIndustry = mySIT?.myIndustry;
     const myTerritory = mySIT?.myTerritory;
@@ -770,7 +962,7 @@ class SummaryViewController {
       });
 
       // Step 2: Extract opportunities from the stage history records
-      const opportunitiesInMonth = stageHistoryRecords.map(
+      let opportunitiesInMonth = stageHistoryRecords.map(
         (record) => record.opportunity
       );
 
@@ -780,9 +972,15 @@ class SummaryViewController {
         filterOptions
       );
 
+      console.log("My view Heat Map -------------- - ", myView , filteredOpportunities)
       // Optional stage : if myView Filter is Enabled
-      if(myView){
-        opportunitiesInMonth = opportunitiesInMonth.filter((opportunity) => mySolution?.includes(opportunity?.solution?.toString()) && myTerritory?.includes(opportunity?.client?.territory.toString()) && myIndustry?.includes(opportunity?.client?.industry?.toString()));
+      if (myView) {
+        opportunitiesInMonth = opportunitiesInMonth.filter(
+          (opportunity) =>
+            mySolution?.includes(opportunity?.solution?.toString()) &&
+            myTerritory?.includes(opportunity?.client?.territory.toString()) &&
+            myIndustry?.includes(opportunity?.client?.industry?.toString())
+        );
       }
 
       // Step 4: Add the filtered count to the response data
@@ -810,13 +1008,11 @@ class SummaryViewController {
       );
       heatMapData[`${i.toString()}`] = currentYearData;
     }
-    return res
-      .status(200)
-      .json({
-        status: "success",
-        message: "Heat Map fetched successfully",
-        data: heatMapData,
-      });
+    return res.status(200).json({
+      status: "success",
+      message: "Heat Map fetched successfully",
+      data: heatMapData,
+    });
   });
   //  static getHeatData = catchAsyncError( async (year, stageId, subStageId, filterOptions ) => {
   //   try {
@@ -879,8 +1075,6 @@ class SummaryViewController {
   // Ensure `getOpportunityDistribution` uses an arrow function to bind `this`
   static getOpportunityDistribution = async (req, res, endDate) => {
     req.body.particularDate = endDate; // Should work correctly here
-    console.log("request 2:", req);
-
     const pipeView = await PipeViewController.generatePipeView(req, res);
     const funnelStats = FunnelViewController.getFunnelStateCount(pipeView);
 
@@ -889,19 +1083,39 @@ class SummaryViewController {
 
   static getSummaryView = catchAsyncError(async (req, res) => {
     const myView = req.query.myView == "true";
-    console.log("myView------------", myView)
+    console.log("myView------------", myView);
     const mySIT = getMyViewFilter(req.user);
 
     const { startDate = null, endDate = null } = req.body;
     const fsd = startDate ? new Date(startDate) : new Date("2010-01-01");
     const fed = endDate ? new Date(endDate) : new Date(Date.now());
 
-    const expectedRevenue = await this.getExpectedRevenue(fsd, fed, myView, mySIT);
+    const expectedRevenue = await this.getExpectedRevenue(
+      fsd,
+      fed,
+      myView,
+      mySIT
+    );
+    console.log("expected revenue in summary view ");
+    console.log("expected revenue in summary view ", expectedRevenue);
     const actualRevenue = await this.getActualRevenue(fsd, fed, myView, mySIT);
-    const openOpportunities = await this.getOpenOpportunities(fsd, fed, myView, mySIT);
-    const opportunityWonCount = await this.getOpportunityWonCount(fsd, fed, myView, mySIT);
+    const openOpportunities = await this.getOpenOpportunities(
+      fsd,
+      fed,
+      myView,
+      mySIT
+    );
+    const opportunityWonCount = await this.getOpportunityWonCount(
+      fsd,
+      fed,
+      myView,
+      mySIT
+    );
     const opportunityDistribution =
       await SummaryViewController.getOpportunityDistribution(req, res, fed);
+    console.log(
+      "request 2 -------------------------------------------------------"
+    );
 
     await appendCompareStats(
       actualRevenue,
@@ -909,7 +1123,9 @@ class SummaryViewController {
       openOpportunities,
       opportunityWonCount,
       fsd,
-      fed
+      fed,
+      myView,
+      mySIT
     );
     console.log("Actual Revenue:", actualRevenue);
     // console.log("Expected Revenue:", expectedRevenue);

@@ -17,17 +17,19 @@ export const appendCompareStats = async (
   openOpportunities,
   opportunityWonCount,
   fsd,
-  fed
+  fed,
+  myView,
+  mySIT
 ) => {
 
   const { startDate, endDate } = getLastDurationDates(fsd, fed);
   const compareDescription = getLastDurationDescription(startDate, endDate);
   console.log("newStartDate : ",startDate);
   console.log("newEndDate : ",endDate);
-  const lastActualRevenue = await SummaryViewController.getActualRevenue(startDate, endDate);
-  const lastExpectedRevenue = await SummaryViewController.getExpectedRevenue(startDate, endDate);
-  const lastOpenOpportunities = await SummaryViewController.getOpenOpportunities(startDate, endDate);
-  const lastOpportunityWonCount = await SummaryViewController.getOpportunityWonCount(startDate, endDate);
+  const lastActualRevenue = await SummaryViewController.getActualRevenue(startDate, endDate, myView, mySIT);
+  const lastExpectedRevenue = await SummaryViewController.getExpectedRevenue(startDate, endDate, myView, mySIT);
+  const lastOpenOpportunities = await SummaryViewController.getOpenOpportunities(startDate, endDate, myView, mySIT);
+  const lastOpportunityWonCount = await SummaryViewController.getOpportunityWonCount(startDate, endDate, myView, mySIT);
 
   const compare = {
     percentage: 0,

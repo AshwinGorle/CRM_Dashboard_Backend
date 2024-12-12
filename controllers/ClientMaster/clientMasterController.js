@@ -86,7 +86,7 @@ class ClientMasterController {
          await parseContacts(relatedContacts, newClient);
          console.log("client in controller",newClient)
         
-        console.log("req.file---", req.file);
+  
         if (req.file) {
             const avatarUrl = await uploadAndGetAvatarUrl(req.file, 'client', newClient._id, "stream");
             newClient.avatar = avatarUrl;
@@ -161,7 +161,7 @@ static getClientById = catchAsyncError(async (req, res, next) => {
 static updateClient = catchAsyncError(async (req, res, next) => {
     const { id } = req.params;
     const updateData = req.body;
-    console.log(req.body)
+
     const client = await ClientMasterModel.findById(id);
 
     if (!client) throw new ServerError("NotFound", "Client");

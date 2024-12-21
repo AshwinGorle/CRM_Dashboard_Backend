@@ -28,7 +28,8 @@ class ContactMasterController {
       city,
       state,
       country,
-      territory
+      territory,
+      createdAt
     } = req.body;
 
     // Validate required fields
@@ -80,7 +81,8 @@ class ContactMasterController {
       memorableDetail,
       detailsConfirmation,
       notes,
-      territory
+      territory,
+      createdAt
     });
     if(req.file){
       newContact.avatar = await uploadAndGetAvatarUrl(req.file,"contact",newContact._id, "stream");

@@ -20,6 +20,7 @@ class RegistrationMasterController {
       primaryContact,
       submittedDocuments,
       notes,
+      createdAt
     } = req.body;
 
     // Validate required fields
@@ -54,6 +55,7 @@ class RegistrationMasterController {
       primaryContact,
       submittedDocuments,
       notes,
+      createdAt
     });
 
     // Save the instance

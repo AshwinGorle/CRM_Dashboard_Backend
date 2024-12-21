@@ -22,6 +22,7 @@ class BusinessDevelopmentController {
       potentialTopLine,
       potentialOffset,
       Notes,
+      createdAt
     } = req.body;
 
     // Validate required fields
@@ -54,6 +55,7 @@ class BusinessDevelopmentController {
       potentialTopLine,
       potentialOffset,
       Notes,
+      createdAt
     });
     newBusinessDevelopment.potentialRevenue = checkForPotentialRevenue(newBusinessDevelopment);
     console.log("bd after creating potential Revenue : ", newBusinessDevelopment);

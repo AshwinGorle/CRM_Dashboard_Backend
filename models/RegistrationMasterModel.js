@@ -61,7 +61,7 @@ const RegistrationMasterSchema = new mongoose.Schema({
         type: String
     }]
     // single or multiple
-})
+},{timestamps : true})
 
 const RegistrationMasterModel = new mongoose.model("RegistrationMaster", RegistrationMasterSchema);
 export default RegistrationMasterModel;

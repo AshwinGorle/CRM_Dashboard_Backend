@@ -87,7 +87,7 @@ const TenderMasterSchema = new mongoose.Schema({
   submissionDate: {
     type: Date,
   },
-});
+},{timestamps : true});
 
 const TenderMasterModel = new mongoose.model(
   "TenderMaster",

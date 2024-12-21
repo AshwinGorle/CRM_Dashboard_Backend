@@ -104,7 +104,7 @@ const ContactMasterSchema = new mongoose.Schema({
     type: String
 }]
 
-});
+},{timestamps : true});
 
 const ContactMasterModel = new mongoose.model(
   "ContactMaster",

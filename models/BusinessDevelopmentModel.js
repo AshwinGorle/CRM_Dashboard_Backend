@@ -62,7 +62,7 @@ const BusinessDevelopmentSchema = new mongoose.Schema({
     }]
 
 
-})
+},{timestamps : true})
 
 const BusinessDevelopmentModel = new mongoose.model("BusinessDevelopment", BusinessDevelopmentSchema);
 export default BusinessDevelopmentModel;

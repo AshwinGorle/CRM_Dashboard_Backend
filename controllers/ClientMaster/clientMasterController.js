@@ -36,6 +36,7 @@ class ClientMasterController {
             lifeTimeValue,
             priority,
             detailsConfirmation,
+            createdAt
         } = req.body;
     
         // Validate required fields
@@ -80,6 +81,7 @@ class ClientMasterController {
             lifeTimeValue,
             priority,
             detailsConfirmation,
+            createdAt
         });
         
         // Ensure relatedContacts is an array and not empty

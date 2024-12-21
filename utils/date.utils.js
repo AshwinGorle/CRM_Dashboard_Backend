@@ -47,3 +47,21 @@ export const formatDurationInShort = (days, prefix) => {
       solutionCheck && industryCheck && territoryCheck
     )
  }
+
+ function getQuarterDates(year) {
+  // Helper function to create a date in ISO format
+  const formatDate = (year, month, day) =>
+    new Date(Date.UTC(year, month - 1, day)).toISOString().split("T")[0];
+
+  // Define quarters with their respective start and end months and days
+  return {
+    q1: { startDate: formatDate(year, 1, 1), endDate: formatDate(year, 3, 31) },
+    q2: { startDate: formatDate(year, 4, 1), endDate: formatDate(year, 6, 30) },
+    q3: { startDate: formatDate(year, 7, 1), endDate: formatDate(year, 9, 30) },
+    q4: { startDate: formatDate(year, 10, 1), endDate: formatDate(year, 12, 31) },
+  };
+}
+
+// Example usage
+const quarterDates = getQuarterDates(2024);
+console.log(quarterDates);

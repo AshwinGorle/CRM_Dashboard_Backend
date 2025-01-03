@@ -1,11 +1,13 @@
-import PermissionModel from "../models/PermissionModel.js";
+import EntityModel from "../models/EntityModel.js";
 
-export const createPermissionEntity = async (roleName) => {
-    const permission = new PermissionModel({
-        entity: roleName,
-        actions: ["create", "read", "update", "delete", "get-all"],
-    });
+export const createEntity = async (entityName, role) => {
+  const entity = new EntityModel({
+    entity: entityName,
+    label: entityName,
+    roleId: role._id,
+    actions: ["CREATE", "READ", "UPDATE", "DELETE", "GET ALL"],
+  });
 
-    await permission.save();
-    return permission;
+  await entity.save();
+  return entity;
 };

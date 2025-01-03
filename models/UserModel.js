@@ -52,16 +52,10 @@ const UserSchema = new mongoose.Schema(
       required: true,
       enum: ["M", "F", "O"],
     },
-    // role: {
-    //   type: String,
-    //   enum: ["viewer", "admin", "user", "superuser"],
-    //   default: "viewer",
-    // },
     role: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Role",
     },
-
     isVerified: {
       type: Boolean,
       default: false,

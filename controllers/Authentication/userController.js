@@ -3,16 +3,17 @@ import { ServerError } from "../../utils/customErrorHandler.utils.js";
 import uploadAndGetAvatarUrl from "../../utils/uploadAndGetAvatarUrl.utils.js";
 import UserModel from "../../models/UserModel.js";
 import AuthController from "./authController.js";
+
 class UserController {
   static getAllUser = catchAsyncError(async (req, res, next) => {
-    console.log("getAll user called ")
+    console.log("getAll user called ");
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 12;
     const skip = (page - 1) * limit;
     const { config } = req.query;
 
     // Check if config is provided and is true
-    if (config === 'true') {
+    if (config === "true") {
       const users = await UserModel.find().select("firstName lastName");
       return res.status(200).json({
         status: "success",
@@ -22,19 +23,27 @@ class UserController {
     }
 
     const totalCount = await UserModel.countDocuments(); // Ensure this is awaited
-    const users = await UserModel.find().populate("role").limit(limit).skip(skip).select("-password");
+    const users = await UserModel.find()
+      .populate("role")
+      .limit(limit)
+      .skip(skip)
+      .select("-password");
 
     return res.status(200).json({
       status: "success",
       message: "All user fetched successfully",
-      data: { page, limit, totalCount, users }
+      data: { page, limit, totalCount, users },
     });
-});
- 
-static generateAlphabetPassword = (length = 4) =>
-  Array.from({ length }, () =>
-    String.fromCharCode(Math.random() < 0.5 ? 65 + Math.floor(Math.random() * 26) : 97 + Math.floor(Math.random() * 26))
-  ).join('');
+  });
+
+  static generateAlphabetPassword = (length = 4) =>
+    Array.from({ length }, () =>
+      String.fromCharCode(
+        Math.random() < 0.5
+          ? 65 + Math.floor(Math.random() * 26)
+          : 97 + Math.floor(Math.random() * 26)
+      )
+    ).join("");
 
   static getUser = catchAsyncError(async (req, res, next) => {
     const id = req.params.id;
@@ -61,12 +70,17 @@ static generateAlphabetPassword = (length = 4) =>
     const user = await UserModel.findById(id);
     if (!user) throw new ServerError("NotFound", "user");
     Object.keys(updateData).forEach((key) => {
-      if(key != "_id" && key != "password" && key != "otp" && key != "isVerified" )
-      if(key == 'city' || key == 'country' || key == 'state' ){
-        user['address'][key] = updateData[key];
-      }else{
-        user[key] = updateData[key];
-      }
+      if (
+        key != "_id" &&
+        key != "password" &&
+        key != "otp" &&
+        key != "isVerified"
+      )
+        if (key == "city" || key == "country" || key == "state") {
+          user["address"][key] = updateData[key];
+        } else {
+          user[key] = updateData[key];
+        }
     });
     if (req.file) {
       user.avatar = await uploadAndGetAvatarUrl(

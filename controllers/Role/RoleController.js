@@ -5,7 +5,11 @@ import {
 } from "../../utils/customErrorHandler.utils.js";
 import RoleModel from "../../models/RoleModel.js";
 import EntityModel from "../../models/EntityModel.js";
-import { createEntity } from "../../utils/createEntity.js";
+import {
+  createEntity,
+  updateEntity,
+  deleteEntity,
+} from "./roleEntityController.js";
 import mongoose from "mongoose";
 
 class RoleController {
@@ -40,28 +44,6 @@ class RoleController {
     });
   });
 
-  // static getRole = async (roleName) => {
-  //     const role = await RoleModel.findOne({ name: roleName }).populate('permissions.entity').lean();
-
-  //     if (!role) {
-  //         return next(new ServerError("RoleNotFound", "The role with the specified ID was not found."));
-  //     }
-
-  //     const permissionsWithAllowedActions = role.permissions.map(permissionEntry => {
-  //         const permission = permissionEntry.entity;
-
-  //         return {
-  //             entity: permission.entity,
-  //             allowedActions: permissionEntry.allowedActions
-  //         };
-  //     });
-
-  //     return {
-  //         name: role.name,
-  //         permissions: permissionsWithAllowedActions
-  //     };
-  // };
-
   static getRole = catchAsyncError(async (req, res, next) => {
     const { id } = req.params;
 
@@ -82,17 +64,6 @@ class RoleController {
       );
     }
 
-    // const permissionsWithAllowedActions = role.permissions.map(permissionEntry => {
-    //     const permission = permissionEntry.entity;
-
-    //     return {
-    //         entity: permission.entity,
-    //         allowedActions: permissionEntry.allowedActions
-    //     };
-    // });
-
-    // role.permissions = permissionsWithAllowedActions;
-
     res.status(200).json({
       status: "success",
       message: "Role fetched successfully",
@@ -108,123 +79,173 @@ class RoleController {
 
     roleName = roleName.toUpperCase();
 
-    const existingRole = await RoleModel.findOne({ roleName });
-    const existingEntity = await EntityModel.findOne({ entity: roleName });
+    const existingRole = await RoleModel.findOne({ roleName }).session(session);
+    const existingEntity = await EntityModel.findOne({
+      entity: roleName,
+    }).session(session);
+
     if (existingRole || existingEntity) {
       throw new ClientError("Duplicate", "Role name already exists");
     }
 
     // Create new role
-    const newRole = await RoleModel.create({ name: roleName });
+    const newRole = await RoleModel.create([{ name: roleName }], { session });
 
-    await createEntity(roleName, newRole);
+    // Create associated entity using the session
+    await createEntity(newRole[0], session);
 
     // Send response
     res.status(201).json({
       success: true,
       message: "Role created successfully",
-      role: newRole,
+      role: newRole[0],
     });
-  });
+  }, true);
 
-  static editRolePermissions = catchAsyncError(async (req, res, next) => {
-    try {
-      const { id } = req.params;
-      const { permissionUpdates } = req.body;
-      console.log(" permission updates 1 : ", permissionUpdates);
-      // Fetch the role with populated permissions
-      const role = await RoleModel.findById(id);
+  static editRolePermissions = catchAsyncError(
+    async (req, res, next, session) => {
+      try {
+        const { id } = req.params;
+        const { permissionUpdates } = req.body;
 
-      if (!role) {
-        throw new ClientError("Not Found", "Role not found.");
-      }
-      // Validate allowedActions for each update
-      for (const update of permissionUpdates) {
-        const permission = role.permissions.find(
-          (perm) => perm.entity.toString() === update.entity.toString()
-        );
+        if (
+          !permissionUpdates ||
+          !Array.isArray(permissionUpdates) ||
+          permissionUpdates.length === 0
+        ) {
+          throw new ClientError(
+            "InvalidInput",
+            "Permission updates are required."
+          );
+        }
 
-        if (!mongoose.Types.ObjectId.isValid(update.entity)) {
-          return next(
-            new ClientError(
+        // Fetch the role with permissions
+        const role = await RoleModel.findById(id).session(session);
+        if (!role) {
+          throw new ClientError("NotFound", "Role not found.");
+        }
+
+        for (const update of permissionUpdates) {
+          // Validate entity ID
+          if (!mongoose.Types.ObjectId.isValid(update.entity)) {
+            throw new ClientError(
               "InvalidId",
               "The provided permission entity ID is invalid."
-            )
+            );
+          }
+
+          // Fetch the actual entity for validation
+          const actualPermission = await EntityModel.findById(
+            update.entity
+          ).session(session);
+          if (!actualPermission) {
+            throw new ClientError(
+              "NotFound",
+              `Permission entity with ID ${update.entity} does not exist.`
+            );
+          }
+
+          const actualActions = actualPermission.actions; // Get valid actions for the entity
+          const invalidActions = update.allowedActions.filter(
+            (action) => !actualActions.includes(action)
           );
-        }
-        const actualPermission = await EntityModel.findById(update.entity);
 
-        if (!actualPermission) {
-          throw new ClientError(
-            "Not Found",
-            "The specified permission entity does not exist."
+          if (invalidActions.length > 0) {
+            throw new ClientError(
+              "InvalidAction",
+              `The following actions are invalid for entity ${
+                actualPermission.entity
+              }: ${invalidActions.join(", ")}`
+            );
+          }
+
+          // Check if permission exists in the role
+          const permissionIndex = role.permissions.findIndex(
+            (perm) => perm.entity.toString() === update.entity.toString()
           );
+
+          if (update.allowedActions.length === 0) {
+            // If allowedActions is empty, remove the permission
+            if (permissionIndex !== -1) {
+              role.permissions.splice(permissionIndex, 1);
+            }
+          } else {
+            if (permissionIndex !== -1) {
+              // Update existing permission
+              role.permissions[permissionIndex].allowedActions =
+                update.allowedActions;
+            } else {
+              // Add new permission
+              role.permissions.push({
+                entity: update.entity,
+                allowedActions: update.allowedActions,
+              });
+            }
+          }
         }
 
-        const actualActions = actualPermission.actions; // Get the actual actions for the entity
+        // Save the updated role
+        const updatedRole = await role.save({ session });
 
-        // Check if allowedActions are valid
-        const invalidActions = update.allowedActions.filter(
-          (action) => !actualActions.includes(action)
-        );
-        if (invalidActions.length > 0) {
-          throw new ClientError(
-            "Invalid Action",
-            `The following actions are not valid: ${invalidActions.join(", ")}`
-          );
-        }
-
-        if (permission) {
-          // Update allowedActions if valid
-          permission.allowedActions = update.allowedActions; // Update allowedActions
-        } else {
-          // If permission doesn't exist, Push a new permission entry
-          role.permissions.push({
-            entity: update.entity,
-            allowedActions: update.allowedActions,
-          });
-        }
+        res.status(200).json({
+          status: "success",
+          message: "Permissions updated successfully.",
+          data: updatedRole,
+        });
+      } catch (error) {
+        return res.status(400).json({
+          status: "error",
+          message: error.message,
+        });
       }
+    },
+    true
+  );
 
-      // Save the updated role
-      const updatedRole = await role.save();
-
-      res.status(201).json({
-        status: "success",
-        message: "Permissions edited successfully.",
-        data: updatedRole,
-      });
-    } catch (error) {
-      return res.status(400).json({
-        status: "error",
-        message: error.message,
-      });
-    }
-  });
-
-  static updateRole = catchAsyncError(async (req, res, next) => {
+  static updateRole = catchAsyncError(async (req, res, next, session) => {
     const id = req.params.id;
-    const { roleName } = req.body;
-    console.log("role name", roleName);
-    console.log("role id", id);
-    roleName.toUpperCase();
-    const role = await RoleModel.findByIdAndUpdate(id, { name: roleName });
-    res.status(201).json({
+    let { roleName } = req.body;
+
+    if (!roleName || roleName.trim() === "" || roleName.length > 20) {
+      throw new ClientError("InvalidInput", "Invalid role name!");
+    }
+
+    roleName = roleName.toUpperCase();
+    const updatedRole = await RoleModel.findByIdAndUpdate(
+      id,
+      { name: roleName },
+      { new: true, runValidators: true, session }
+    );
+
+    if (!updatedRole) {
+      throw new ClientError("NotFound", "Role not found");
+    }
+
+    await updateEntity(updatedRole, session);
+
+    res.status(200).json({
       status: "success",
       message: "Role updated successfully",
-      data: role,
+      data: updatedRole,
     });
-  });
+  }, true);
 
-  static deleteRole = catchAsyncError(async (req, res, next) => {
+  static deleteRole = catchAsyncError(async (req, res, next, session) => {
     const id = req.params.id;
-    const role = await RoleModel.findByIdAndDelete(id);
+    const role = await RoleModel.findByIdAndDelete(id, { session });
+
+    if (!role) {
+      throw new ClientError("NotFound", "Role not found");
+    }
+
+    await deleteEntity(role, session);
+
     res.status(201).json({
       status: "success",
       message: "Role deleted successfully",
       data: role,
     });
-  });
+  }, true);
 }
 
 export default RoleController;

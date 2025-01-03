@@ -1,14 +1,25 @@
 import { Router } from "express";
 import SummaryViewController from "../../controllers/Dashboards/SummaryViewController.js";
 const summaryViewRouter = Router();
+import checkPermissions from "../../middlewares/checkPermission.js";
+import { actionTypes } from "../../config/actionTypes.js";
 
-summaryViewRouter.post("/", SummaryViewController.getSummaryView);
-summaryViewRouter.post("/heat-map", SummaryViewController.getHeatMap);
+const entity = "SUMMARY VIEW";
+summaryViewRouter.post(
+  "/",
+  checkPermissions(entity, actionTypes.ALL_VIEW),
+  SummaryViewController.getSummaryView
+);
+summaryViewRouter.post(
+  "/heat-map",
+  checkPermissions(entity, actionTypes.ALL_VIEW),
+  SummaryViewController.getHeatMap
+);
 
 export default summaryViewRouter;
 
 // const obj = [{
-//    // this is object for one sales champ similar to this you have to calculate for all the saleschamps in the system and push them in this array  
+//    // this is object for one sales champ similar to this you have to calculate for all the saleschamps in the system and push them in this array
 //   firstName: "firstName", // name of saleschamp whoes entry details in different modals we are showing
 //   lastName: "last name",
 //   _id: "here mongoose id", // id of this salesChamp

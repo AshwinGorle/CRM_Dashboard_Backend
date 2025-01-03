@@ -18,6 +18,10 @@ const checkPermissions = (resource, action, targetEntityId = null) => {
         });
       }
 
+      if (role.name === "SUPER ADMIN") {
+        return next();
+      }
+
       // Check if the resource is a user
 
       let permission = null;

@@ -1,32 +1,38 @@
 import { Router } from "express";
 import BusinessDevelopmentController from "../../controllers/Business Development/businessDevelopmentController.js";
 import checkPermissions from "../../middlewares/checkPermission.js";
+import { actionTypes } from "../../config/actionTypes.js";
 const businessDevelopmentRouter = Router();
 
 const entity = "BUSINESS DEVELOPMENT";
+
 businessDevelopmentRouter.get(
   "/",
-  checkPermissions(entity, "GET ALL"),
+  checkPermissions(entity, actionTypes.GET_ALL),
   BusinessDevelopmentController.getAllBusinessDevelopments
 );
+
 businessDevelopmentRouter.get(
   "/:id",
-  checkPermissions(entity, "READ"),
+  checkPermissions(entity, actionTypes.READ),
   BusinessDevelopmentController.getBusinessDevelopmentById
 );
+
 businessDevelopmentRouter.post(
   "/",
-  checkPermissions(entity, "CREATE"),
+  checkPermissions(entity, actionTypes.CREATE),
   BusinessDevelopmentController.createBusinessDevelopment
 );
+
 businessDevelopmentRouter.put(
   "/:id",
-  checkPermissions(entity, "UPDATE"),
+  checkPermissions(entity, actionTypes.UPDATE),
   BusinessDevelopmentController.updateBusinessDevelopment
 );
+
 businessDevelopmentRouter.delete(
   "/:id",
-  checkPermissions(entity, "DELETE"),
+  checkPermissions(entity, actionTypes.DELETE),
   BusinessDevelopmentController.deleteBusinessDevelopment
 );
 

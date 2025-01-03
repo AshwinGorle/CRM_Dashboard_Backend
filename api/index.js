@@ -20,8 +20,8 @@ import authenticateToken from "../middlewares/authenticateToken.js";
 import currencyRateRouter from "../routes/currency rates/currencyRateRoute.js";
 import dashboardRouter from "../routes/dashboard/dashboardRoute.js";
 import roleRouter from "../routes/role/roleRouter.js";
-import "../Testing/InsertPredefinePermissions.js.js";
 import systemRouter from "../routes/system/systemRouter.js";
+
 const app = express();
 const corsOptions = {
   origin: [
@@ -48,7 +48,6 @@ app.use("/system", systemRouter);
 app.use("/auth", authRouter);
 app.use(authenticateToken);
 app.use("/check-login-user", (req, res) => {
-  console.log("check-login-user", req.user);
   res.send({
     status: "success",
     data: req.user,

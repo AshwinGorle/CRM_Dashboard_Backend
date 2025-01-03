@@ -6,7 +6,11 @@ import { actionTypes } from "../../config/actionTypes.js";
 const userRouter = Router();
 
 const entity = "USER";
-userRouter.get("/", UserController.getAllUser);
+userRouter.get(
+  "/",
+  checkPermissions(entity, actionTypes.GET_ALL),
+  UserController.getAllUser
+);
 userRouter.get(
   "/:id",
   (req, res, next) =>

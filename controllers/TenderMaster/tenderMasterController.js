@@ -4,10 +4,9 @@ import {
   ClientError,
   ServerError,
 } from "../../utils/customErrorHandler.utils.js";
-import ClientMasterModel from "../../models/ClientMasterModel.js";
-import mongoose from "mongoose";
-import { checkForSubmissionDate, checkForTenderId } from "../../utils/tender.utils.js";
+import { checkForSubmissionDate } from "../../utils/tender.utils.js";
 import { getFilterOptions, getSortingOptions } from "../../utils/searchOptions.js";
+import { getTenderIdWithoutClient } from "../../service/client/tenderService.js";
 class TenderMasterController {
   // Create a new TenderMaster entry
  
@@ -39,6 +38,9 @@ class TenderMasterController {
     if (!rfpDate || !entryDate || !enteredBy)
       throw new ClientError("AllRequired");
 
+    // Validate client
+    if(!client) throw new ServerError('Not found', "Client is required!");
+
     // Create a new instance of the TenderMasterModel
     const newTender = new TenderMasterModel({
       rfpDate,
@@ -61,13 +63,15 @@ class TenderMasterController {
       stage,
       stageExplanation
     });
-    if(newTender.stage) newTender.submissionDate =  await checkForSubmissionDate(newTender.stage); // handling submission date
-    if (client) newTender.customId =  await checkForTenderId(client)  // handling custom tender Id
+
+    // if tender stage is submitted we have to update submission date else set it null
+    if(newTender.stage) newTender.submissionDate =  await checkForSubmissionDate(newTender.stage); 
+
+    // Handle tender customId generation
+    if (client) newTender.customId =  await getTenderIdWithoutClient(client);  // handling custom tender Id
 
     // Save the instance
-    console.log("newTender before save : ", newTender)
     await newTender.save();
-    console.log("newTender after save : ", newTender)
     
     res.status(201).json({
       status: "success",
@@ -129,11 +133,15 @@ class TenderMasterController {
   static updateTenderMaster = catchAsyncError(async (req, res, next) => {
     const { id } = req.params;
     let updateData = req.body;
-    console.log("updating dat", updateData)
+    console.log("updating tender req :", updateData)
     const tenderMaster = await TenderMasterModel.findById(id);
     if (!tenderMaster) throw new ServerError("NotFound", "TenderMaster");
+
+    // checking for submission date
     if(updateData.stage) tenderMaster.submissionDate =  await checkForSubmissionDate(updateData.stage); // handling submission date
-    if (updateData.client && !tenderMaster.customId) updateData['customId'] =  await checkForTenderId(updateData.client)  // handling tender Id
+    
+    // if client changed in tender we have to update the tender's customId
+    if (updateData.client) updateData['customId'] =  await getTenderIdWithoutClient(updateData.client); // handling tender Id
   
     Object.keys(updateData).forEach((key) => {
       if(key != "submissionDate")

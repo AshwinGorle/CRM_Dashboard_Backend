@@ -1,11 +1,13 @@
 import TenderStageModel from "../models/ConfigModels/TenderMaster/TenderStageModel.js"
+import { fetchSubmittedTenderStage } from "../service/client/systemService.js";
 import { ServerError } from "./customErrorHandler.utils.js";
-import ClientMasterModel from "../models/ClientMasterModel.js";
+
 export const checkForSubmissionDate = async (stageId) => {
    console.log("updating submission date");
+   const tenderSubmittedStageId = await fetchSubmittedTenderStage(); 
    const tenderStage = await TenderStageModel.findById(stageId);
    if (!tenderStage) throw new ServerError("NotFound", "tender stage")
-   if(tenderStage.label == "Tender Submitted"){
+   if(tenderStage._id.toString() == tenderSubmittedStageId.toString()){
       return Date.now();
    }else{
     return null
@@ -38,21 +40,22 @@ export const generateTenderId = (territoryName, clientName, date) => {
     return customID;
   };
 
-export const checkForTenderId = async (clientId, tender) => {
-    const clientDetails = await ClientMasterModel.findById(clientId)
-        .select("name territory")
-        .populate("territory");
-    if(!clientDetails) throw new ServerError("NotFound", "client (while calculating tenderId)")
-      const territory = clientDetails?.territory?.label;
-      if (territory) {
-        const tenderId = generateTenderId(
-          territory,
-          clientDetails.name,
-          new Date()
-        );
-        console.log("Territory Id ", tenderId);
-        return tenderId;
-      }else{
-        return null;
-      }
-}
+  //obsolated
+// export const checkForTenderId = async (clientId, tender) => {
+//     const clientDetails = await ClientMasterModel.findById(clientId)
+//         .select("name territory")
+//         .populate("territory");
+//     if(!clientDetails) throw new ServerError("NotFound", "client (while calculating tenderId)")
+//       const territory = clientDetails?.territory?.label;
+//       if (territory) {
+//         const tenderId = generateTenderId(
+//           territory,
+//           clientDetails.name,
+//           new Date()
+//         );
+//         console.log("Territory Id ", tenderId);
+//         return tenderId;
+//       }else{
+//         return null;
+//       }
+// }

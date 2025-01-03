@@ -1,15 +1,10 @@
 
 import { catchAsyncError } from "../../middlewares/catchAsyncError.middleware.js";
 import OpportunityMasterModel from "../../models/OpportunityMasterModel.js";
-import { ServerError } from "../../utils/customErrorHandler.utils.js";
+import { ClientError, ServerError } from "../../utils/customErrorHandler.utils.js";
 import { errors } from "../../utils/responseMessages.js";
-import {
-  updateTotalRevenueAndSales,
-  validateOpportunityId,
-} from "../../utils/opportunity.utils.js";
 
 import RevenueController from "./revenueController.js";
-import { checkForLifetimeValueAndUpdate } from "../../utils/client.utils.js";
 import {
   getFilterOptions,
   getSortingOptions,
@@ -17,6 +12,9 @@ import {
 import StageHistoryController from "../History/stageHistoryController.js";
 import SalesStageController from "../Stage/salesStageController.js";
 import SalesSubStageController from "../Stage/salesSubStageController.js";
+import { getOpportunityIdWithoutClient, updateTotalRevenueAndExpectedSales } from "../../service/client/opportunityService.js";
+import { updateLifeTimeValueOfClient } from "../../service/client/clientService.js";
+import { fetchWonStage } from "../../service/client/systemService.js";
 class OpportunityController {
   static createOpportunity = catchAsyncError(
     async (req, res, next, session) => {
@@ -41,12 +39,8 @@ class OpportunityController {
       } = req.body;
       // Validate required fields
       console.log("revenue from frontend :  ", revenue);
-      if (!projectName || !stageClarification) {
-        return res.status(400).json({
-          status: "failed",
-          message: "All required fields must be filled",
-        });
-      }
+      if (!projectName|| !stageClarification) throw new ClientError("requiredFields"," Project Name & Stage Clarification is Required!")
+      if (!client) throw new ClientError("requiredFields","Client is Required!")
 
       // Manual validation for entryDate
       entryDate = new Date(entryDate);
@@ -55,7 +49,7 @@ class OpportunityController {
           .status(400)
           .json({ status: "failed", message: "Invalid entryDate" });
       }
-
+      
       let newOpportunity = new OpportunityMasterModel({
         entryDate,
         enteredBy,
@@ -74,33 +68,30 @@ class OpportunityController {
         confidenceLevel,
         expectedWonDate
       });
-      //generating customId for Opp.
-      await validateOpportunityId(req.body, newOpportunity);
 
-      //handling revenues
-      if (revenue) {
-        await RevenueController.handleRevenue(revenue, newOpportunity, session);
-      }
+      //generating customId for Opp.
+      newOpportunity.customId = await getOpportunityIdWithoutClient(client)
+
+      //Parse the revenues into opportunity revenue field formate
+      if (revenue) await RevenueController.handleRevenue(revenue, newOpportunity, session);
+      
+      //Save the Opportunity Before Updating clients revenue and expected sales 
       await newOpportunity.save({ session });
 
       // After Inserting Revenue re-calculation expected Sales
-      newOpportunity = await OpportunityMasterModel.findById(newOpportunity._id)
-        .populate("revenue")
-        .session(session);
-      updateTotalRevenueAndSales(newOpportunity);
-      console.log(
-        "opportunity after expected sales calculation ",
-        newOpportunity
-      );
+      newOpportunity = await OpportunityMasterModel.findById(newOpportunity._id).populate("revenue").session(session);
+      updateTotalRevenueAndExpectedSales(newOpportunity);
+      console.log("opportunity expected sales and totalRevenue", newOpportunity.expectedSales, newOpportunity.totalRevenue);
+      
+      // Save opportunity as all updates related to opportunity is done
       await newOpportunity.save({ session });
 
-      // It will update the LifeTime Value field of client hence no changes to save in this new opportunity
-      if (newOpportunity.client)
-        await checkForLifetimeValueAndUpdate(newOpportunity.client, session);
-
+      // It will update the LifeTime Value of client associated with the opportunity
+      await updateLifeTimeValueOfClient(newOpportunity.client, session);
+      
       // Managing Sales Stage History
-      const newStageHistoryId_ = await StageHistoryController.createInitialHistory( newOpportunity._id,  newOpportunity.entryDate, session);
-      newOpportunity.stageHistory.push(newStageHistoryId_);
+      const newStageHistoryId = await StageHistoryController.createInitialHistory( newOpportunity._id,  newOpportunity.entryDate, session);
+      newOpportunity.stageHistory.push(newStageHistoryId);
       await newOpportunity.save({session});
 
       return res.status(201).json({
@@ -167,7 +158,7 @@ class OpportunityController {
     //     expectedSales,
     //   };
     // });
-    console.log("opportunities ", opportunities)
+    // console.log("opportunities ", opportunities)
 
     return res.send({
       status: "success",
@@ -215,33 +206,43 @@ class OpportunityController {
     async (req, res, next, session) => {
       const { id } = req.params;
       let updateData = req.body;
-      console.log("updated op data : -----", updateData);
+      console.log("updated opportunity req : -----", updateData);
+      let previousClient = null // to keep tract of client change
      
       let opportunity = await OpportunityMasterModel.findById(id).session(session);
       if (!opportunity) throw new ServerError("Update Opportunity", errors.opportunity.NOT_FOUND);
 
-      // await validateOpportunityId(updateData, opportunity);
+      // validating updateDate
+      const updateDate  = updateData.updateDate ? new Date(updateData.updateDate) : Date.now();
+      
+      // if client is changed have to revert the lifeTime value of previous Client
+      if(updateData.client) previousClient = opportunity.client._id;
+
+      //updating directly updatable fields
       Object.keys(updateData).forEach((key) => {
         if (key != "revenue") opportunity[key] = updateData[key];
       });
+      
+      //if updateData contains client then have to change the opportunity customId
+      if(updateData.client) opportunity.customId = await getOpportunityIdWithoutClient(updateData.client);
 
       // If Update contains stage change
       if(updateData.salesStage){
-        console.log("Entering in stage change");
+        console.log("Entering in sales stage change :");
         const updateDate  = updateData.updateDate ? new Date(updateData.updateDate) : Date.now();
         await SalesStageController.handleStageChange(updateData.salesStage, opportunity._id,  updateDate, session )
       }
-      
-      const updateDate  = updateData.updateDate ? new Date(updateData.updateDate) : Date.now();
+
+      // Handle sales subStage change
       if(updateData.salesSubStage){
-        console.log("Entering in sub stage change");
+        console.log("Entering in sub stage change :");
         const updateDate  = updateData.updateDate ? new Date(updateData.updateDate) : Date.now();
         await SalesSubStageController.handleSubStageChange(updateData.salesSubStage, opportunity._id, updateDate, session)
       }
       
       // if the substage is won then have to close the opportunity
-      const wonSubStageId = "670e81150a2c8e8563f16b55"  // only yha ye id string me chahiye !! 
-      if(updateData.salesSubStage == wonSubStageId ) opportunity.closingDate = updateDate
+      const wonSubStageId = await fetchWonStage();  // only yha ye id string me chahiye !! 
+      if(updateData?.salesSubStage?.toString() == wonSubStageId?.toString()) opportunity.closingDate = updateDate
       
       // If update contains revenue handle it
       if (updateData.revenue) {
@@ -251,8 +252,9 @@ class OpportunityController {
           session
         );
       }
+
+      // All changes related to opportunity is done
       await opportunity.save({ session });
-      console.log("opportunity after save", opportunity);
 
       //Updating revenue and sales 
       let updatedOpportunity = await OpportunityMasterModel.findById(
@@ -262,17 +264,34 @@ class OpportunityController {
         .session(session);
 
       if(updateData.revenue){
-        updateTotalRevenueAndSales(updatedOpportunity);
+        updateTotalRevenueAndExpectedSales(updatedOpportunity);
         await updatedOpportunity.save({ session });
       }
       
       // If Update contains client then have to re calculate the client's lifetime value
       if (updatedOpportunity.client)
-        await checkForLifetimeValueAndUpdate(
+        await updateLifeTimeValueOfClient(
           updatedOpportunity.client,
           session
       );
 
+      // Updating previous client lifeTime Value
+      if(previousClient){
+        await updateLifeTimeValueOfClient(
+          previousClient,
+          session
+         );
+      }
+
+      // if opportunity is in final stage we will update lifeTime value of associated client
+      console.log("sales sub stage : ", updatedOpportunity.salesSubStage)
+      if(updatedOpportunity.salesSubStage.toString() == wonSubStageId){
+        console.log("updating lifeTime value of client : ")
+        await updateLifeTimeValueOfClient(
+         updatedOpportunity.client,
+          session
+        );
+      }
 
       res.status(200).json({
         status: "success",
@@ -291,7 +310,7 @@ class OpportunityController {
         id
       ).session(session);
       if (opportunity.client)
-        await checkForLifetimeValueAndUpdate(opportunity.client, session);
+        await updateLifeTimeValueOfClient(opportunity.client, session);
       res.status(200).json({
         status: "success",
         message: "Opportunity deleted successfully",

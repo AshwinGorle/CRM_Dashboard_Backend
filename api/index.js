@@ -20,7 +20,8 @@ import authenticateToken from "../middlewares/authenticateToken.js";
 import currencyRateRouter from "../routes/currency rates/currencyRateRoute.js";
 import dashboardRouter from "../routes/dashboard/dashboardRoute.js";
 import roleRouter from "../routes/role/roleRouter.js";
-import "../Testing/InsertPredefinedEntities.js";
+import "../Testing/InsertPredefinePermissions.js.js";
+import systemRouter from "../routes/system/systemRouter.js";
 const app = express();
 const corsOptions = {
   origin: [
@@ -43,6 +44,7 @@ const DB_URL = process.env.DATABASE2_URL;
 connectDb(DB_URL);
 
 app.get("/", homePage);
+app.use("/system", systemRouter);
 app.use("/auth", authRouter);
 app.use(authenticateToken);
 app.use("/check-login-user", (req, res) => {

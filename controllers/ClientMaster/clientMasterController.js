@@ -2,13 +2,17 @@ import mongoose from "mongoose";
 import { clientError } from "../../config/responseMessage.js";
 import { catchAsyncError } from "../../middlewares/catchAsyncError.middleware.js";
 import ClientMasterModel from  "../../models/ClientMasterModel.js"
-import { checkForLifetimeValueAndUpdate, getClient, parseContacts } from "../../utils/client.utils.js";
+import { getClient } from "../../utils/client.utils.js";
 import { ServerError } from "../../utils/customErrorHandler.utils.js";
 import OpportunityMasterModel from "../../models/OpportunityMasterModel.js" 
 import ContactMasterModel from "../../models/ContactMasterModel.js";
 import uploadAndGetAvatarUrl from "../../utils/uploadAndGetAvatarUrl.utils.js";
 import { getClientId } from "../../utils/client.utils.js";
 import { getFilterOptions, getSortingOptions } from "../../utils/searchOptions.js";
+import { parseContacts } from "../../service/client/clientService.js";
+import { handleUpdateOpportunityId } from "../../service/client/opportunityService.js";
+import { handleUpdateTenderId } from "../../service/client/tenderService.js";
+import TerritoryModel from "../../models/Configuration/TerritoryModel.js";
 
 class ClientMasterController {
 
@@ -38,6 +42,7 @@ class ClientMasterController {
             detailsConfirmation,
             createdAt
         } = req.body;
+        
     
         // Validate required fields
         if (
@@ -45,7 +50,8 @@ class ClientMasterController {
             !industry ||
             !subIndustry ||
             !territory ||
-            !incorporationType
+            !incorporationType ||
+            !annualRevenue
         ) {
             return res.status(400).json({ status: 'failed', message: 'All required fields must be filled' });
         }
@@ -85,15 +91,14 @@ class ClientMasterController {
         });
         
         // Ensure relatedContacts is an array and not empty
-         await parseContacts(relatedContacts, newClient);
-         console.log("client in controller",newClient)
-        
-  
+        await parseContacts(relatedContacts, newClient);
+         
+        // handles avatar changes in client 
         if (req.file) {
             const avatarUrl = await uploadAndGetAvatarUrl(req.file, 'client', newClient._id, "stream");
             newClient.avatar = avatarUrl;
         }
-    
+
         // Save the instance after all modifications are done
         await newClient.save();
         console.log("New client:", newClient);
@@ -160,31 +165,42 @@ static getClientById = catchAsyncError(async (req, res, next) => {
     });
 });
 
-static updateClient = catchAsyncError(async (req, res, next) => {
+static updateClient = catchAsyncError(async (req, res, next, session) => {
     const { id } = req.params;
     const updateData = req.body;
-
-    const client = await ClientMasterModel.findById(id);
+    console.log("update client req : ", updateData)
+    const client = await ClientMasterModel.findById(id).populate('territory');
 
     if (!client) throw new ServerError("NotFound", "Client");
-
+    
+    // Updating directly updatable fields
     Object.keys(updateData).forEach((key) => {
         if(key!='relatedContacts')
           client[key] = updateData[key];
     });
-   
+    
+    // Parsing Related contacts 
     if(updateData.relatedContacts) await parseContacts(updateData.relatedContacts, client);
+
+    // Handle Client Avatar change
     if(req.file){
         client.avatar =  await uploadAndGetAvatarUrl(req.file,'client',client._id, "stream" );
     }
-    const updatedClientMaster = await client.save();
+    
+    const updatedClientMaster = await client.save({session});
+    // on change of ( territory || name ) we have to update tenders and opportunities custom id associated with this client
+    if(updateData.territory || updateData.name){
+        if(updateData.territory) client.territory = await TerritoryModel.findById(client.territory);
+        await handleUpdateOpportunityId(client._id, client.name, client.territory,  session);
+        await handleUpdateTenderId(client._id, client.name, client.territory, session);
+    }
     
     res.status(200).json({
         status: 'success',
         message: 'Client updated successfully',
         data: updatedClientMaster,
     });
-});
+}, true);
 
 static deleteClient = catchAsyncError(async (req, res, next) => {
     const { id } = req.params;

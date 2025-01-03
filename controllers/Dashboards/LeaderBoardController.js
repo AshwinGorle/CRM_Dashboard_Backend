@@ -211,10 +211,8 @@ class LeaderBoardController {
 
        
        stageEntriesData.forEach((sEntry)=>{
-        console.log("examin--------")
          const indexInModalEntries = modalEntriesData.findIndex((mEntry)=> mEntry._id.toString() === sEntry._id.toString())
         //  const indexInModalEntries = 0;
-         console.log("index ----- ",  indexInModalEntries)
          if(indexInModalEntries >= 0){
            modalEntriesData[indexInModalEntries].entryDetails.currentQuarter = {...modalEntriesData[indexInModalEntries].entryDetails.currentQuarter, ...sEntry.entryDetails.currentQuarter}
            modalEntriesData[indexInModalEntries].entryDetails.lastQuarter = {...modalEntriesData[indexInModalEntries].entryDetails.lastQuarter, ...sEntry.entryDetails.lastQuarter}
@@ -225,7 +223,7 @@ class LeaderBoardController {
         })
 
         // return res.send({status : "success", message : "leader board fetched successfully", data : modalEntriesData});
-        return res.send({status : "success", message : "leader board fetched successfully", data : {modal : modalEntriesData, stage : stageEntriesData}});
+        return res.send({status : "success", message : "leader board fetched successfully", data :  modalEntriesData });
   })
 }
 

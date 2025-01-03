@@ -3,6 +3,10 @@ import SystemController from '../../controllers/System/SystemController.js';
 
 const systemRouter = express.Router();
 
+// Route to get entire system config
+systemRouter.get('/', SystemController.getSystemConfig);
+systemRouter.put('/', SystemController.updateSystemConfig);
+
 // Route to update wonSalesStage
 systemRouter.put('/won-stage', SystemController.updateWonStage);
 

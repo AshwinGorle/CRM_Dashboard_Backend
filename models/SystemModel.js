@@ -1,12 +1,12 @@
 import mongoose from "mongoose";
 
 const systemSchema = new mongoose.Schema({
-    wonSalesStage : {
+    wonStage : {
         type : mongoose.Schema.Types.ObjectId,
         ref : 'SalesStage',
         default : null
     },
-    submittedTenderStage : {
+    tenderSubmittedStage : {
         type : mongoose.Schema.Types.ObjectId,
         ref : 'Stage',
         default : null

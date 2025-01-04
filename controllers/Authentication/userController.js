@@ -4,9 +4,12 @@ import uploadAndGetAvatarUrl from "../../utils/uploadAndGetAvatarUrl.utils.js";
 import UserModel from "../../models/UserModel.js";
 import AuthController from "./authController.js";
 
+const isSuperAdmin = (role) => role.name === "SUPER ADMIN";
+
 class UserController {
   static getAllUser = catchAsyncError(async (req, res, next) => {
-    console.log("getAll user called ");
+    console.log("getAll user called - allowed roleIds", req.allowedRoleIds);
+
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 12;
     const skip = (page - 1) * limit;
@@ -22,8 +25,22 @@ class UserController {
       });
     }
 
-    const totalCount = await UserModel.countDocuments(); // Ensure this is awaited
-    const users = await UserModel.find()
+    let baseQuery = {};
+
+    // Check if user is not super admin
+    if (!isSuperAdmin(req.user.role)) {
+      const allowedRoleIds = req.allowedRoleIds;
+      if (!allowedRoleIds || allowedRoleIds.length === 0) {
+        return res.status(403).json({
+          status: "error",
+          message: "You do not have permission to access any users.",
+        });
+      }
+      baseQuery.role = { $in: allowedRoleIds };
+    }
+
+    const totalCount = await UserModel.countDocuments(baseQuery);
+    const users = await UserModel.find(baseQuery)
       .populate("role")
       .limit(limit)
       .skip(skip)

@@ -6,9 +6,10 @@ import { actionTypes } from "../config/actionTypes.js";
 const checkPermissions = (resource, action, targetEntityId = null) => {
   return async (req, res, next) => {
     try {
-      return next();
+      console.log("Resource:", resource);
+      console.log("Action:", action);
+
       const userRoleId = req.user.role._id;
-      console.log("req.user", req.user);
       const role = await RoleModel.findById(userRoleId).populate(
         "permissions.entity"
       );
@@ -19,40 +20,60 @@ const checkPermissions = (resource, action, targetEntityId = null) => {
         });
       }
 
-      if (role.name === "SUPER ADMIN") {
+      if (role.name === "SUPER ADMIN" || req.query.config === "true") {
         return next();
       }
-
-      if (req.query.config === "true") {
-        return next();
-      }
-
-      // Check if the resource is a user
 
       let permission = null;
 
+      // Check if the resource is a user
       if (resource === "USER") {
-        if (action != actionTypes.GET_ALL && !targetEntityId) {
-          throw new ClientError("BadRequest", "Target user ID is required.");
-        }
+        if (action == actionTypes.GET_ALL) {
+          let allowedRoleEntities = role.permissions.filter(
+            (perm) =>
+              perm.entity.roleId && perm.allowedActions?.includes(action)
+          );
 
-        // Fetch the target user's role
-        const targetUser = await UserModel.findById(targetEntityId);
-        console.log("Target User", targetUser);
-        if (!targetUser) {
-          throw new ClientError("Not Found", "Target user not found.");
-        }
+          if (allowedRoleEntities.length === 0) {
+            throw new ClientError(
+              "Unauthorized",
+              "You do not have permission to access this resource."
+            );
+          }
 
-        // Use the target user's role name as the entity
-        resource = targetUser.role?.toString();
-        if (!resource) {
-          throw ClientError("Not Found", "Target User has no role");
+          let allowedRoleIds = allowedRoleEntities.map((perm) =>
+            perm.entity.roleId.toString()
+          );
+
+          req.allowedRoleIds = allowedRoleIds;
+
+          return next();
+        } else if (action == actionTypes.CREATE) {
+          permission = role.permissions.find(
+            (perm) => perm.entity?.roleId?.toString() == targetEntityId
+          );
+        } else {
+          if (!targetEntityId) {
+            throw new ClientError("BadRequest", "Target user ID is required.");
+          }
+          // Fetch the target user's role
+          const targetUser = await UserModel.findById(targetEntityId);
+
+          if (!targetUser) {
+            throw new ClientError("Not Found", "Target user not found.");
+          }
+
+          // Use the target user's role id as the entity
+          resource = targetUser.role?.toString();
+
+          if (!resource) {
+            throw ClientError("Not Found", "Target User has no role");
+          }
+
+          permission = role.permissions.find(
+            (perm) => perm.entity?.roleId?.toString() === resource
+          );
         }
-        console.log(role.permissions[0]);
-        permission = role.permissions.find(
-          (perm) => perm.entity?.roleId?.toString() === resource
-        );
-        console.log("permission-USER-RESOURCE", permission);
       } else {
         // Find the permission related to the resource (entity)
         permission = role.permissions.find(
@@ -71,11 +92,11 @@ const checkPermissions = (resource, action, targetEntityId = null) => {
       if (!permission.allowedActions.includes(action)) {
         throw new ClientError(
           "Unauthorized",
-          "You do not have the required action permission."
+          "You do not have permission for this action!"
         );
       }
 
-      next();
+      return next();
     } catch (error) {
       return res.status(403).json({
         status: "error",

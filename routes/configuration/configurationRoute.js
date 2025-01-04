@@ -18,6 +18,7 @@ configurationRoute.use(
   checkPermissions(entity, actionTypes.GET_ALL),
   ConfigurationController.getCount
 );
+
 configurationRoute.use("/industry", industryRouter);
 configurationRoute.use("/sub-industry", subIndustryMasterRouter);
 configurationRoute.use("/sales-stage", salesStateRouter);

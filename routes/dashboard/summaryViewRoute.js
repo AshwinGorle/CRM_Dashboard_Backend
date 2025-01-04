@@ -8,13 +8,13 @@ const entity = "SUMMARY VIEW";
 summaryViewRouter.post(
   "/",
   checkPermissions(entity, actionTypes.ALL_VIEW),
-  SummaryViewController.getSummaryView
+  SummaryViewController.getIntireSummaryView
 );
-summaryViewRouter.post(
-  "/heat-map",
-  checkPermissions(entity, actionTypes.ALL_VIEW),
-  SummaryViewController.getHeatMap
-);
+// summaryViewRouter.post(
+//   "/heat-map",
+//   checkPermissions(entity, actionTypes.ALL_VIEW),
+//   SummaryViewController.getHeatMap
+// );
 
 export default summaryViewRouter;
 

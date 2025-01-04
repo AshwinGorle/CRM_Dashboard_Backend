@@ -240,9 +240,13 @@ class OpportunityController {
         await SalesSubStageController.handleSubStageChange(updateData.salesSubStage, opportunity._id, updateDate, session)
       }
       
+      let wonSubStageId = null;
       // if the substage is won then have to close the opportunity
-      const wonSubStageId = await fetchWonStage();  // only yha ye id string me chahiye !! 
-      if(updateData?.salesSubStage?.toString() == wonSubStageId?.toString()) opportunity.closingDate = updateDate
+      if(updateData?.salesSubStage){
+        wonSubStageId = await fetchWonStage();  // only yha ye id string me chahiye !! 
+        if(updateData?.salesSubStage?.toString() == wonSubStageId?.toString()) opportunity.closingDate = updateDate
+        else opportunity.closingDate = updateDate = null
+      }
       
       // If update contains revenue handle it
       if (updateData.revenue) {

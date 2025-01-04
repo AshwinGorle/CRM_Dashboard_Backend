@@ -1,6 +1,6 @@
 
 import { getLastDurationDates, getLastDurationDescription } from "./date.utils.js";
-import SummaryViewController from "../controllers/Dashboards/SummaryViewController.js";
+import SummaryViewController from "../controllers/Dashboards/oldSummaryViewController.js";
 
 export const calculatePercentageChange = (currentValue, previousValue = 0) => {
   if (previousValue === 0) {

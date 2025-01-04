@@ -1,5 +1,5 @@
-import SystemModel from "../../models/SystemModel.js";
-import { ClientError } from "../../utils/customErrorHandler.utils.js";
+import SystemModel from "../models/SystemModel.js";
+import { ClientError } from "../utils/customErrorHandler.utils.js";
 
 // it returns won stage Id  in object id form
 export const fetchWonStage = async () => {

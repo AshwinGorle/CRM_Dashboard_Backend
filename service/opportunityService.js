@@ -1,7 +1,7 @@
-import OpportunityMasterModel from "../../models/OpportunityMasterModel.js";
+import OpportunityMasterModel from "../models/OpportunityMasterModel.js";
 import { getOpportunityId } from "./clientService.js";
-import ClientMasterModel from "../../models/ClientMasterModel.js";
-import { ServerError } from "../../utils/customErrorHandler.utils.js";
+import ClientMasterModel from "../models/ClientMasterModel.js";
+import { ServerError } from "../utils/customErrorHandler.utils.js";
 
 // used in update client
 // when client name or territory updated we need to change the opportunity customId here clientTerritory is object

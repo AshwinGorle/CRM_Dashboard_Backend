@@ -1,6 +1,6 @@
-import ClientMasterModel from "../../models/ClientMasterModel.js";
-import ContactMasterModel from "../../models/ContactMasterModel.js";
-import OpportunityMasterModel from "../../models/OpportunityMasterModel.js";
+import ClientMasterModel from "../models/ClientMasterModel.js";
+import ContactMasterModel from "../models/ContactMasterModel.js";
+import OpportunityMasterModel from "../models/OpportunityMasterModel.js";
 
 const generateCustomId = (clientName, clientTerritory, type) => {
   console.log('client in generateCustomID : ', clientName, clientTerritory, type)

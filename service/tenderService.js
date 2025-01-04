@@ -1,5 +1,5 @@
-import ClientMasterModel from "../../models/ClientMasterModel.js";
-import TenderMasterModel from "../../models/TenderMasterModel.js"
+import ClientMasterModel from "../models/ClientMasterModel.js";
+import TenderMasterModel from "../models/TenderMasterModel.js"
 import { getTenderId } from "./clientService.js";
 
 // when client name or territory updated we need to change the tender customId

@@ -1,5 +1,5 @@
 import TenderStageModel from "../models/ConfigModels/TenderMaster/TenderStageModel.js"
-import { fetchSubmittedTenderStage } from "../service/client/systemService.js";
+import { fetchSubmittedTenderStage } from "../service/systemService.js";
 import { ServerError } from "./customErrorHandler.utils.js";
 
 export const checkForSubmissionDate = async (stageId) => {

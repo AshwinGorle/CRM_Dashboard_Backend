@@ -12,9 +12,9 @@ import {
 import StageHistoryController from "../History/stageHistoryController.js";
 import SalesStageController from "../Stage/salesStageController.js";
 import SalesSubStageController from "../Stage/salesSubStageController.js";
-import { getOpportunityIdWithoutClient, updateTotalRevenueAndExpectedSales } from "../../service/client/opportunityService.js";
-import { updateLifeTimeValueOfClient } from "../../service/client/clientService.js";
-import { fetchWonStage } from "../../service/client/systemService.js";
+import { getOpportunityIdWithoutClient, updateTotalRevenueAndExpectedSales } from "../../service/opportunityService.js";
+import { updateLifeTimeValueOfClient } from "../../service/clientService.js";
+import { fetchWonStage } from "../../service/systemService.js";
 class OpportunityController {
   static createOpportunity = catchAsyncError(
     async (req, res, next, session) => {

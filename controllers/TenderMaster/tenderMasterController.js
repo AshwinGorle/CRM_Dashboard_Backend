@@ -6,7 +6,7 @@ import {
 } from "../../utils/customErrorHandler.utils.js";
 import { checkForSubmissionDate } from "../../utils/tender.utils.js";
 import { getFilterOptions, getSortingOptions } from "../../utils/searchOptions.js";
-import { getTenderIdWithoutClient } from "../../service/client/tenderService.js";
+import { getTenderIdWithoutClient } from "../../service/tenderService.js";
 class TenderMasterController {
   // Create a new TenderMaster entry
  

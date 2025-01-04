@@ -9,9 +9,9 @@ import ContactMasterModel from "../../models/ContactMasterModel.js";
 import uploadAndGetAvatarUrl from "../../utils/uploadAndGetAvatarUrl.utils.js";
 import { getClientId } from "../../utils/client.utils.js";
 import { getFilterOptions, getSortingOptions } from "../../utils/searchOptions.js";
-import { parseContacts } from "../../service/client/clientService.js";
-import { handleUpdateOpportunityId } from "../../service/client/opportunityService.js";
-import { handleUpdateTenderId } from "../../service/client/tenderService.js";
+import { parseContacts } from "../../service/clientService.js";
+import { handleUpdateOpportunityId } from "../../service/opportunityService.js";
+import { handleUpdateTenderId } from "../../service/tenderService.js";
 import TerritoryModel from "../../models/Configuration/TerritoryModel.js";
 
 class ClientMasterController {

@@ -40,18 +40,23 @@ export const getTargetsForYear = async (entityType, year) => {
   }));
 };
 
-export const validateTargetsFormate = (targets) => {
+export const validateTargetsFormat = (targets) => {
   const validQuarters = ["q1", "q2", "q3", "q4"];
   const targetKeys = Object.keys(targets);
+
   if (
     targetKeys.length !== 4 ||
-    !validQuarters.every((quarter) => targetKeys.includes(quarter)) ||
-    !Object.values(targets).every(
-      (value) => typeof value === "number" && value >= 0
-    )
+    !validQuarters.every((quarter) => targetKeys.includes(quarter))
   ) {
     return false;
-  } else {
-    return true;
   }
+
+  // Convert string numbers to actual numbers, default to 0 if not numeric
+  for (const key in targets) {
+    const value = targets[key];
+    targets[key] = isNaN(value) ? 0 : Number(value);
+  }
+
+  return true;
 };
+

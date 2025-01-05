@@ -1,14 +1,14 @@
 import mongoose from "mongoose";
 import { catchAsyncError } from "../../middlewares/catchAsyncError.middleware.js";
-import { getTargetsForYear, setTarget, validateTargetsFormate } from "../../service/targetService.js";
+import { getTargetsForYear, setTarget, validateTargetsFormat } from "../../service/targetService.js";
 import { ClientError } from "../../utils/customErrorHandler.utils.js";
 
 class TargetController{
       static setTargetController = catchAsyncError(async(req, res, next, session)=>{
          const {entityType, entityId, year, targets} = req.body;
          if(!entityType || !entityId || !year || !targets) throw new ClientError("NOT_FOUND",`All fields are required`);
-         if(!validateTargetsFormate(targets)) throw new ClientError("INVALID_INPUT",`Please provide targets in valid formate`);
- 
+         if(!validateTargetsFormat(targets)) throw new ClientError("INVALID_INPUT",`Please provide targets in valid formate`);
+         console.log("Target : ", targets)
          const EntityModel = mongoose.model(entityType);
          // if model does not exists 
          if (!EntityModel) throw new ClientError("NOT_FOUND",`Invalid entityType: ${entityType}`);

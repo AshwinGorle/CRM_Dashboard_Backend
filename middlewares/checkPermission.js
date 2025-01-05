@@ -5,6 +5,7 @@ import { actionTypes } from "../config/actionTypes.js";
 
 const checkPermissions = (resource, action, targetEntityId = null) => {
   return async (req, res, next) => {
+    // return next();
     try {
       console.log("Resource:", resource);
       console.log("Action:", action);

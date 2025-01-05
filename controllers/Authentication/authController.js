@@ -196,7 +196,9 @@ class AuthController {
     }
 
     try {
-      const user = await UserModel.findOne({ email });
+      const user = await UserModel.findOne({ email }).populate({
+        path: "role",
+      });
       if (!user || !(await bcrypt.compare(password, user.password))) {
         return res
           .status(400)

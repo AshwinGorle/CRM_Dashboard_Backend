@@ -16,7 +16,15 @@ const authenticateToken = async (req, res, next) => {
     const decodedToken = jwt.verify(token, process.env.SECRET_KEY);
 
     // Find the user by the decoded userId
-    const user = await UserModel.findById(decodedToken.userId).populate("role");
+    const user = await UserModel.findById(decodedToken.userId)
+      .populate({
+        path: "role",
+        populate: {
+          path: "permissions.entity", // Deep populate the entity inside permissions
+          model: "Entity", // Replace with your entity model name if different
+        },
+      })
+      .exec();
 
     if (!user) {
       return res.status(401).json({
@@ -24,6 +32,14 @@ const authenticateToken = async (req, res, next) => {
         message: "User not found, please login.",
       });
     }
+
+    // if (user && user.role) {
+    //   // Transform the role to flatten entities within it
+    //   user.role.permissions = user.role.permissions.map((permission) => {
+    //     const { entity, ...rest } = permission.toObject();
+    //     return { ...rest, entityName: entity?.name || null }; // Add additional fields as needed
+    //   });
+    // }
 
     req.user = user; // Attach the user to the request object for further processing
     next(); // Proceed to the next middleware or route handler

@@ -196,9 +196,15 @@ class AuthController {
     }
 
     try {
-      const user = await UserModel.findOne({ email }).populate({
-        path: "role",
-      });
+      const user = await UserModel.findOne({ email })
+        .populate({
+          path: "role",
+          populate: {
+            path: "permissions.entity", // Deep populate the entity inside permissions
+            model: "Entity", // Replace with your entity model name if different
+          },
+        })
+        .exec();
       if (!user || !(await bcrypt.compare(password, user.password))) {
         return res
           .status(400)

@@ -10,9 +10,8 @@ import { myViewFilter } from "../../utils/date.utils.js";
 class PipeViewController {
   static generatePipeView = async(req, res, next)=>{
     const myView = req.query.myView == "true"
-  
     const filterOptions =  getFilterOptions(req?.query);
-    // console.log("filter", filterOptions);
+    console.log("filter Options", filterOptions);
 
     const { particularDate } = req.body; // Expected to be a timestamp
     if (!particularDate) throw new Error("Particular date is required.");

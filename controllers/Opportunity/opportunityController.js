@@ -245,7 +245,7 @@ class OpportunityController {
       if(updateData?.salesSubStage){
         wonSubStageId = await fetchWonStage();  // only yha ye id string me chahiye !! 
         if(updateData?.salesSubStage?.toString() == wonSubStageId?.toString()) opportunity.closingDate = updateDate
-        else opportunity.closingDate = updateDate = null
+        else opportunity.closingDate = null
       }
       
       // If update contains revenue handle it

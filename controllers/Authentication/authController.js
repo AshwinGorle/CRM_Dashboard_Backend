@@ -35,6 +35,7 @@ class AuthController {
       firstName,
       lastName,
       phone,
+      phoneCountryCode,
       email,
       password,
       password_confirmation,
@@ -59,6 +60,7 @@ class AuthController {
       !firstName ||
       !lastName ||
       !phone ||
+      !phoneCountryCode ||
       !email ||
       !password ||
       !gender ||
@@ -94,6 +96,7 @@ class AuthController {
         firstName,
         lastName,
         phone,
+        phoneCountryCode,
         email,
         address,
         gender,

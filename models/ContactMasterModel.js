@@ -49,7 +49,14 @@ const ContactMasterSchema = new mongoose.Schema({
   phone: {
     type: String,
   },
+  phoneCountryCode: {
+    type: String,
+  },
   mobilePhone: {
+    type: String,
+    required: true,
+  },
+  mobileCountryCode: {
     type: String,
     required: true,
   },

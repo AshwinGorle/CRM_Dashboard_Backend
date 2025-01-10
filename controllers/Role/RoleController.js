@@ -108,11 +108,9 @@ class RoleController {
         const { id } = req.params;
         const { permissionUpdates } = req.body;
 
-        if (
-          !permissionUpdates ||
-          !Array.isArray(permissionUpdates) ||
-          permissionUpdates.length === 0
-        ) {
+        console.log("permissionUpdates", permissionUpdates);
+
+        if (!permissionUpdates || !Array.isArray(permissionUpdates)) {
           throw new ClientError(
             "InvalidInput",
             "Permission updates are required."
@@ -160,29 +158,30 @@ class RoleController {
           }
 
           // Check if permission exists in the role
-          const permissionIndex = role.permissions.findIndex(
-            (perm) => perm.entity.toString() === update.entity.toString()
-          );
+          // const permissionIndex = role.permissions.findIndex(
+          //   (perm) => perm.entity.toString() === update.entity.toString()
+          // );
 
-          if (update.allowedActions.length === 0) {
-            // If allowedActions is empty, remove the permission
-            if (permissionIndex !== -1) {
-              role.permissions.splice(permissionIndex, 1);
-            }
-          } else {
-            if (permissionIndex !== -1) {
-              // Update existing permission
-              role.permissions[permissionIndex].allowedActions =
-                update.allowedActions;
-            } else {
-              // Add new permission
-              role.permissions.push({
-                entity: update.entity,
-                allowedActions: update.allowedActions,
-              });
-            }
-          }
+          // if (update.allowedActions.length === 0) {
+          //   // If allowedActions is empty, remove the permission
+          //   if (permissionIndex !== -1) {
+          //     role.permissions.splice(permissionIndex, 1);
+          //   }
+          // } else {
+          //   if (permissionIndex !== -1) {
+          //     // Update existing permission
+          //     role.permissions[permissionIndex].allowedActions =
+          //       update.allowedActions;
+          //   } else {
+          //     // Add new permission
+          //     role.permissions.push({
+          //       entity: update.entity,
+          //       allowedActions: update.allowedActions,
+          //     });
+          //   }
+          // }
         }
+        role.permissions = permissionUpdates;
 
         // Save the updated role
         const updatedRole = await role.save({ session });

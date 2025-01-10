@@ -2,6 +2,12 @@ import ClientMasterModel from "../models/ClientMasterModel.js";
 import TenderMasterModel from "../models/TenderMasterModel.js"
 import { getTenderId } from "./clientService.js";
 
+export const getTender = async (tenderId, onNotFound ,session)=>{
+    const tender = await TenderMasterModel.findById(tenderId).session(session)
+    if(!tender) throw new ServerError("NotFound", `${onNotFound}`);
+    return tender
+}
+
 // when client name or territory updated we need to change the tender customId
 export const handleUpdateTenderId = async (clientId, clientName, clientTerritory, session) => {
     const tenders = await TenderMasterModel.find({ client: clientId }).session(session);
@@ -22,3 +28,4 @@ export const getTenderIdWithoutClient = async(client)=>{
     const customId = getTenderId(fetchedClient.name, fetchedClient.territory);
     return customId;
 }
+

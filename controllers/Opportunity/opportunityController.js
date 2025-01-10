@@ -308,11 +308,19 @@ class OpportunityController {
 
   static deleteOpportunity = catchAsyncError(
     async (req, res, next, session) => {
+      // check whether opp exists or not
       const { id } = req.params;
-
       const opportunity = await OpportunityMasterModel.findByIdAndDelete(
         id
       ).session(session);
+       
+      // fetch all tenders in which this opportunity exists
+            //delete tender or
+            //remove apportunity from tender
+
+      // update lifetime value of client
+
+
       if (opportunity.client)
         await updateLifeTimeValueOfClient(opportunity.client, session);
       res.status(200).json({

@@ -47,6 +47,7 @@ const TenderMasterSchema = new mongoose.Schema({
   associatedOpportunity: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "OpportunityMaster",
+    // required : true,   un-comment in productionCode
   },
   bond: {
     type: Boolean,

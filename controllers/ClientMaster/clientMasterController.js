@@ -204,8 +204,9 @@ static updateClient = catchAsyncError(async (req, res, next, session) => {
 
 static deleteClient = catchAsyncError(async (req, res, next) => {
     const { id } = req.params;
-
     const client = await ClientMasterModel.findByIdAndDelete(id);
+
+    
 
     res.status(200).json({
         status: 'success',

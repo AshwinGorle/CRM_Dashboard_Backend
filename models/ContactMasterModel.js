@@ -58,7 +58,6 @@ const ContactMasterSchema = new mongoose.Schema({
   },
   mobileCountryCode: {
     type: String,
-    required: true,
   },
   workEmail: {
     type: String,
@@ -99,7 +98,7 @@ const ContactMasterSchema = new mongoose.Schema({
   },
   // detailsConfirmation : {
   //   type : Boolean,
-  //   default : false
+  //   default : false+
   // },
   // notes : [
   //    {

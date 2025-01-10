@@ -7,11 +7,12 @@ import {
 import { checkForSubmissionDate } from "../../utils/tender.utils.js";
 import { getFilterOptions, getSortingOptions } from "../../utils/searchOptions.js";
 import { getTenderIdWithoutClient } from "../../service/tenderService.js";
+import { updateAssociatedTenderInOpportunity } from "../../service/opportunityService.js";
 class TenderMasterController {
   // Create a new TenderMaster entry
  
 
-  static createTenderMaster = catchAsyncError(async (req, res, next) => {
+  static createTenderMaster = catchAsyncError(async (req, res, next, session) => {
     const {
       rfpDate,
       entryDate,
@@ -69,16 +70,24 @@ class TenderMasterController {
 
     // Handle tender customId generation
     if (client) newTender.customId =  await getTenderIdWithoutClient(client);  // handling custom tender Id
-
+    
     // Save the instance
-    await newTender.save();
+    await newTender.save({session});
+    
+    //We have to put this tender in corresponding opportunity
+    if(newTender.associatedOpportunity){
+      const opportunityId = newTender.associatedOpportunity
+      const tenderId = newTender._id.toString()
+      // send this in response for redux
+      const opportunity = await updateAssociatedTenderInOpportunity(opportunityId, tenderId, session);
+    }
     
     res.status(201).json({
       status: "success",
       message: "Tender created successfully",
       data: newTender,
     });
-  });
+  },true);
 
   // Get all TenderMaster entries
   static getAllTenderMasters = catchAsyncError(async (req, res, next) => {
@@ -130,12 +139,15 @@ class TenderMasterController {
   });
 
   // Update a TenderMaster by ID
-  static updateTenderMaster = catchAsyncError(async (req, res, next) => {
+  static updateTenderMaster = catchAsyncError(async (req, res, next, session) => {
     const { id } = req.params;
     let updateData = req.body;
     console.log("updating tender req :", updateData)
     const tenderMaster = await TenderMasterModel.findById(id);
     if (!tenderMaster) throw new ServerError("NotFound", "TenderMaster");
+
+    //for later use if opportunity is updated while updating tender
+    let opportunity    
 
     // checking for submission date
     if(updateData.stage) tenderMaster.submissionDate =  await checkForSubmissionDate(updateData.stage); // handling submission date
@@ -148,15 +160,22 @@ class TenderMasterController {
       tenderMaster[key] = updateData[key];
     });
     
+    // if tender contains associatedOpportunity then update the opportunity associatedTender
+    if(updateData.associatedOpportunity){
+       const tenderId = id;
+       const opportunityId = updateData.associatedOpportunity;
+       opportunity = await updateAssociatedTenderInOpportunity(opportunityId, tenderId, session)
+       // send this opportunity in response while maintaining redux
+    }
     
-    const updatedTenderMaster = await tenderMaster.save();
+    const updatedTenderMaster = await tenderMaster.save({session});
 
     res.status(200).json({
       status: "success",
       message: "Tender updated successfully",
       data: updatedTenderMaster,
     });
-  });
+  }, true);
 
   // Delete a TenderMaster by ID
   static deleteTenderMaster = catchAsyncError(async (req, res, next) => {

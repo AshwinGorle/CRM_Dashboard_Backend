@@ -89,7 +89,7 @@ class TenderMasterController {
     });
   },true);
 
-  // Get all TenderMaster entries
+  // Get all TenderMaster entriesA
   static getAllTenderMasters = catchAsyncError(async (req, res, next) => {
     const { page = 1, limit = 12, config = false} = req.query;
     const  skip = (page - 1) * limit 

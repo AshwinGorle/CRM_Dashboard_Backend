@@ -73,6 +73,19 @@ class UserController {
     });
   });
 
+  static getUserProfile = catchAsyncError(async (req, res, next) => {
+    const user = req.user;
+    const userId = user._id.toString()
+    const profile = await UserModel.findById(userId).populate('role industry solution territory');
+    // const user = await UserModel.findById(id).select("-password");
+    // if (!user) throw new ServerError("NotFound", "User");
+    res.status(201).json({
+      status: "success",
+      message: " user fetched successfully",
+      data: profile,
+    });
+  });
+
   static createUser = catchAsyncError(async (req, res, next) => {
     const password = `AXRC${this.generateAlphabetPassword()}`;
     req.body.password = password;

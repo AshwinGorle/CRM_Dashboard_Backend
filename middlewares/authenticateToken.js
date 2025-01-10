@@ -33,14 +33,6 @@ const authenticateToken = async (req, res, next) => {
       });
     }
 
-    // if (user && user.role) {
-    //   // Transform the role to flatten entities within it
-    //   user.role.permissions = user.role.permissions.map((permission) => {
-    //     const { entity, ...rest } = permission.toObject();
-    //     return { ...rest, entityName: entity?.name || null }; // Add additional fields as needed
-    //   });
-    // }
-
     req.user = user; // Attach the user to the request object for further processing
     next(); // Proceed to the next middleware or route handler
   } catch (error) {

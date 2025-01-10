@@ -7,6 +7,13 @@ const userRouter = Router();
 
 const entity = "USER";
 userRouter.get(
+  "/profile",
+  (req, res, next) =>
+    checkPermissions(entity, actionTypes.READ, req.params.id)(req, res, next),
+  UserController.getUserProfile
+);
+
+userRouter.get(
   "/",
   checkPermissions(entity, actionTypes.GET_ALL),
   UserController.getAllUser
@@ -37,5 +44,6 @@ userRouter.delete(
     checkPermissions(entity, actionTypes.DELETE, req.params.id)(req, res, next),
   UserController.deleteUser
 );
+
 
 export default userRouter;

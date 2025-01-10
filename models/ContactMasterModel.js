@@ -49,9 +49,15 @@ const ContactMasterSchema = new mongoose.Schema({
   phone: {
     type: String,
   },
+  phoneCountryCode: {
+    type: String,
+  },
   mobilePhone: {
     type: String,
     required: true,
+  },
+  mobileCountryCode: {
+    type: String,
   },
   workEmail: {
     type: String,
@@ -92,7 +98,7 @@ const ContactMasterSchema = new mongoose.Schema({
   },
   // detailsConfirmation : {
   //   type : Boolean,
-  //   default : false
+  //   default : false+
   // },
   // notes : [
   //    {

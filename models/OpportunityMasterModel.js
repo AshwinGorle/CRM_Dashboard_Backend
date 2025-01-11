@@ -115,8 +115,26 @@ const OpportunityMasterSchema = new mongoose.Schema({
 
 }, {timestamps : true});
 
+
 const OpportunityMasterModel = new mongoose.model(
   "OpportunityMaster",
   OpportunityMasterSchema
 );
+
+// to restrict the association of a tender with multiple
+OpportunityMasterSchema.pre("save", async function (next) {
+  if (this.isModified("associatedTender")) {
+    const existingOpportunity = await OpportunityMasterModel.findOne({
+      associatedTender: this.associatedTender,
+    });
+    if (existingOpportunity) {
+      const error = new Error(
+        `The tender ${this.associatedTender} is already associated with another opportunity.`
+      );
+      return next(error);
+    }
+  }
+  next();
+});
+
 export default OpportunityMasterModel;

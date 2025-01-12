@@ -19,14 +19,18 @@ class RoleController {
     // Fetch roles with pagination
     const roles = await RoleModel.find();
 
-    if (!roles || roles.length === 0) {
+    console.log("req.user.role", req.user.role);
+
+    const filteredRoles = roles?.filter((role) => role.name != "SUPER ADMIN");
+
+    if (!filteredRoles || filteredRoles.length === 0) {
       throw new ServerError("NotFound", "Roles not found");
     }
 
     return res.status(200).json({
       status: "success",
       message: "All roles fetched successfully",
-      data: { totalCount, roles },
+      data: { totalCount, roles: filteredRoles },
     });
   });
 
@@ -72,24 +76,33 @@ class RoleController {
   });
 
   static createRole = catchAsyncError(async (req, res, next, session) => {
-    let { roleName } = req.body;
+    const { roleName } = req.body;
     if (!roleName || roleName.trim() === "" || roleName.length >= 30) {
       throw new ClientError("InvalidInput", "Role name is required");
     }
 
-    roleName = roleName.toUpperCase();
+    // remove all the spaces
+    const normalizedRoleName = roleName.replace(/\s+/g, "").toUpperCase();
 
-    const existingRole = await RoleModel.findOne({ roleName }).session(session);
+    const regexPattern = normalizedRoleName.split("").join("\\s*");
+    const regex = new RegExp(`^${regexPattern}$`, "i");
+
+    const existingRole = await RoleModel.findOne({
+      name: { $regex: regex },
+    }).session(session);
     const existingEntity = await EntityModel.findOne({
-      entity: roleName,
+      entity: { $regex: regex },
     }).session(session);
 
     if (existingRole || existingEntity) {
       throw new ClientError("Duplicate", "Role name already exists");
     }
 
-    // Create new role
-    const newRole = await RoleModel.create([{ name: roleName }], { session });
+    const trimedName = roleName.trim().toUpperCase();
+    // // Create new role
+    const newRole = await RoleModel.create([{ name: trimedName }], {
+      session,
+    });
 
     // Create associated entity using the session
     await createEntity(newRole[0], session);
@@ -108,8 +121,6 @@ class RoleController {
         const { id } = req.params;
         const { permissionUpdates } = req.body;
 
-        console.log("permissionUpdates", permissionUpdates);
-
         if (!permissionUpdates || !Array.isArray(permissionUpdates)) {
           throw new ClientError(
             "InvalidInput",
@@ -117,9 +128,16 @@ class RoleController {
           );
         }
 
+        if (id == req.user.role._id) {
+          throw new ClientError(
+            "Unauthorized",
+            "You can't change your own role's permissions"
+          );
+        }
+
         // Fetch the role with permissions
         const role = await RoleModel.findById(id).session(session);
-        if (!role) {
+        if (!role || role?.name == "SUPER ADMIN") {
           throw new ClientError("NotFound", "Role not found.");
         }
 
@@ -136,6 +154,7 @@ class RoleController {
           const actualPermission = await EntityModel.findById(
             update.entity
           ).session(session);
+
           if (!actualPermission) {
             throw new ClientError(
               "NotFound",
@@ -204,6 +223,10 @@ class RoleController {
   static updateRole = catchAsyncError(async (req, res, next, session) => {
     const id = req.params.id;
     let { roleName } = req.body;
+
+    if (id == req.user.role._id) {
+      throw new ClientError("Unauthorized", "You can't update your own role");
+    }
 
     if (!roleName || roleName.trim() === "" || roleName.length > 20) {
       throw new ClientError("InvalidInput", "Invalid role name!");

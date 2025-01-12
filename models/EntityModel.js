@@ -15,6 +15,16 @@ const EntitySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+EntitySchema.pre("save", function (next) {
+  if (this.entity) {
+    this.entity = this.entity.trim().toUpperCase();
+  }
+  next();
+});
+
+// Unique index for entity
+EntitySchema.index({ entity: 1 }, { unique: true });
+
 const EntityModel = mongoose.model("Entity", EntitySchema);
 
 export default EntityModel;

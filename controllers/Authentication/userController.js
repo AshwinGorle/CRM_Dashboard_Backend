@@ -46,10 +46,16 @@ class UserController {
       .skip(skip)
       .select("-password");
 
+    const usersWithoutSuperAdmin = users.filter(
+      (user) =>
+        user.role.name != "SUPER ADMIN" &&
+        user._id.toString() != req.user._id.toString()
+    );
+
     return res.status(200).json({
       status: "success",
       message: "All user fetched successfully",
-      data: { page, limit, totalCount, users },
+      data: { page, limit, totalCount, users: usersWithoutSuperAdmin },
     });
   });
 

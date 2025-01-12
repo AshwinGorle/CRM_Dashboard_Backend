@@ -6,7 +6,7 @@ import { actionTypes } from "../config/actionTypes.js";
 const checkPermissions = (resource, action, targetEntityId = null) => {
   return async (req, res, next) => {
     try {
-      return next();
+      // return next();
       console.log("Resource:", resource);
       console.log("Action:", action);
 
@@ -63,7 +63,6 @@ const checkPermissions = (resource, action, targetEntityId = null) => {
           if (!targetUser) {
             throw new ClientError("Not Found", "Target user not found.");
           }
-
           // Use the target user's role id as the entity
           resource = targetUser.role?.toString();
 
@@ -96,7 +95,6 @@ const checkPermissions = (resource, action, targetEntityId = null) => {
           "You do not have permission for this action!"
         );
       }
-
       return next();
     } catch (error) {
       return res.status(403).json({

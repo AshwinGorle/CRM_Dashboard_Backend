@@ -156,28 +156,13 @@ class AuthController {
           .json({ status: "failed", message: "Invalid or expired OTP" });
       }
 
-      user.otp = null;
-      user.otpExpiresAt = null;
       user.isVerified = true;
       await user.save();
 
-      const token = jwt.sign(
-        { userId: user._id, userEmail: user.email },
-        process.env.SECRET_KEY,
-        { expiresIn: "10d" }
-      );
-
-      res.cookie("token", token, {
-        httpOnly: true,
-        sameSite: "None",
-        secure: process.env.NODE_ENV === "production",
-        maxAge: 10 * 24 * 60 * 60 * 1000, // 10 days
-      });
-
       res.status(200).json({
         status: "success",
-        message: "Email verified and login successful",
-        data: user,
+        message: "Email verified now set new password",
+        data: { otp },
       });
     } catch (err) {
       console.error("OTP verification error:", err);
@@ -243,7 +228,7 @@ class AuthController {
       res.status(200).json({
         status: "success",
         message: "Login successful",
-        data: user,
+        data: { user, token },
         verified: true,
       });
     } catch (err) {
@@ -354,9 +339,9 @@ class AuthController {
   };
 
   static resetPasswordWithOtp = async (req, res) => {
-    const { email, otp, newPassword, newPasswordConfirmation } = req.body;
+    const { email, otp, newPassword, confirmNewPassword } = req.body;
 
-    if (newPassword !== newPasswordConfirmation) {
+    if (newPassword !== confirmNewPassword) {
       return res
         .status(400)
         .json({ status: "failed", message: "Passwords do not match" });
@@ -391,15 +376,15 @@ class AuthController {
   };
 
   static changePassword = async (req, res) => {
-    const { currentPassword, newPassword, newPasswordConfirmation } = req.body;
-
-    if (!currentPassword || !newPassword || !newPasswordConfirmation) {
+    const { oldPassword, newPassword, confirmNewPassword } = req.body;
+    console.log(req.body);
+    if (!oldPassword || !newPassword || !confirmNewPassword) {
       return res
         .status(400)
         .json({ status: "failed", message: "All fields are required" });
     }
 
-    if (newPassword !== newPasswordConfirmation) {
+    if (newPassword !== confirmNewPassword) {
       return res
         .status(400)
         .json({ status: "failed", message: "Passwords do not match" });
@@ -407,7 +392,7 @@ class AuthController {
 
     try {
       const user = req.user;
-      const isMatch = await bcrypt.compare(currentPassword, user.password);
+      const isMatch = await bcrypt.compare(oldPassword, user.password);
 
       if (!isMatch) {
         return res

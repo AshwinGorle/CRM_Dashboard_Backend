@@ -23,7 +23,10 @@ import { fetchWonStage } from "../../service/systemService.js";
 import TenderMasterModel from "../../models/TenderMasterModel.js";
 import StageHistoryModel from "../../models/HistoryModels/StageHistoryModel.js";
 import SubStageHistoryModel from "../../models/HistoryModels/SubSageHistoryModel.js";
+import RevenueMasterModel from "../../models/RevenueMasterModel.js";
 class OpportunityController {
+
+  // we have commented associated tender in create and update opportunity 
   static createOpportunity = catchAsyncError(
     async (req, res, next, session) => {
       let {
@@ -32,7 +35,7 @@ class OpportunityController {
         client,
         partneredWith,
         projectName,
-        associatedTender,
+        //associatedTender,
         solution,
         subSolution,
         salesChamp,
@@ -54,8 +57,7 @@ class OpportunityController {
         );
       if (!client)
         throw new ClientError("requiredFields", "Client is Required!");
-
-      // Manual validation for entryDate
+        //Manual validation for entryDate
       entryDate = new Date(entryDate);
       if (isNaN(entryDate.getTime())) {
         return res
@@ -69,7 +71,7 @@ class OpportunityController {
         client,
         partneredWith,
         projectName,
-        associatedTender,
+        // associatedTender,
         solution,
         subSolution,
         salesChamp,
@@ -351,28 +353,34 @@ class OpportunityController {
     async (req, res, next, session) => {
       // Extract opportunity ID from request parameters and confirmation from query
       const { id } = req.params;
-      let {confirm} = req.query;
-      confirm = confirm == 'true' ? true : false
-  
+      let { confirm } = req.query;
+      confirm = confirm == "true" ? true : false;
+
       // Step 1: Check if the opportunity exists
-      const opportunity = await OpportunityMasterModel.findById(id).session(session);
+      const opportunity = await OpportunityMasterModel.findById(id).session(
+        session
+      );
       if (!opportunity) {
         return next(new AppError("Opportunity not found", 404));
       }
-  
+
       // Step 2: Fetch the associated tender using the `associatedTender` field
       const tender = opportunity.associatedTender
-        ? await TenderMasterModel.findById(opportunity.associatedTender).session(session)
+        ? await TenderMasterModel.findById(
+            opportunity.associatedTender
+          ).session(session)
         : null;
-  
+
       // Step 3: Fetch all stageHistory records associated with the opportunity
       const stageHistories = await StageHistoryModel.find({
         opportunity: opportunity._id,
       }).session(session);
-  
+
       // Step 4: Collect all subStageHistory IDs linked to these stageHistories
-      const subStageHistoryIds = stageHistories.flatMap(history => history.subStageHistory);
-  
+      const subStageHistoryIds = stageHistories.flatMap(
+        (history) => history.subStageHistory
+      );
+
       // Step 5: If confirmation is false, return the "to-be-deleted" data
       if (!confirm) {
         return res.status(200).json({
@@ -386,39 +394,46 @@ class OpportunityController {
           },
         });
       }
-  
+
       // If confirmation is true, proceed with deletion
-  
+
       // Step 6: Delete the associated tender if it exists
       if (tender) {
         await TenderMasterModel.findByIdAndDelete(tender._id).session(session);
       }
-  
+
       // Step 7: Delete all subStageHistory records linked to the stageHistories
       if (subStageHistoryIds.length > 0) {
         await SubStageHistoryModel.deleteMany({
           _id: { $in: subStageHistoryIds },
         }).session(session);
       }
-  
+
       // Step 8: Delete all stageHistory records associated with the opportunity
       await StageHistoryModel.deleteMany({
         opportunity: opportunity._id,
       }).session(session);
-  
-      // Step 9: Delete the opportunity
+
+      // Step 9: Delete all revenues associated with the opportunity
+      if (opportunity.revenue && opportunity.revenue.length > 0) {
+        await RevenueMasterModel.deleteMany({
+          _id: { $in: opportunity.revenue },
+        }).session(session);
+      }
+
+      // Step 10: Delete the opportunity
       await OpportunityMasterModel.findByIdAndDelete(id).session(session);
-  
-      // Step 10: Update the lifetime value of the client, if the opportunity is associated with a client
+
+      // Step 11: Update the lifetime value of the client, if the opportunity is associated with a client
       if (opportunity.client) {
         await updateLifeTimeValueOfClient(opportunity.client, session);
       }
-  
-      // Step 11: Return the deleted tender in the response
+
+      // Step 12: Return the deleted tender in the response
       res.status(200).json({
         status: "success",
         message: "Opportunity and related items deleted successfully",
-        data: {tender, opportunity},
+        data: { tender, opportunity },
       });
     },
     true

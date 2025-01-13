@@ -8,6 +8,7 @@ import { checkForSubmissionDate } from "../../utils/tender.utils.js";
 import { getFilterOptions, getSortingOptions } from "../../utils/searchOptions.js";
 import { getTenderIdWithoutClient } from "../../service/tenderService.js";
 import { updateAssociatedTenderInOpportunity } from "../../service/opportunityService.js";
+import OpportunityMasterModel from "../../models/OpportunityMasterModel.js";
 class TenderMasterController {
   // Create a new TenderMaster entry
  
@@ -18,7 +19,7 @@ class TenderMasterController {
       entryDate,
       enteredBy = req.user._id,
       submissionDueDate,
-      client,
+      client = null,
       reference,
       rfpTitle,
       rfpSource,
@@ -40,7 +41,14 @@ class TenderMasterController {
       throw new ClientError("AllRequired");
 
     // Validate client
-    if(!client) throw new ServerError('Not found', "Client is required!");
+    // if(!client) throw new ServerError('Not found', "Client is required!");
+    
+    // checking opportunity and if exists then we will replace the client with the client inside opportunity
+    if(associatedOpportunity){
+      const opportunity = await OpportunityMasterModel.findById(associatedOpportunity);
+      if(!opportunity) throw new ServerError("invalid or deleted opportunity!");
+      client = opportunity.client.toString();
+    }
 
     // Create a new instance of the TenderMasterModel
     const newTender = new TenderMasterModel({
@@ -78,6 +86,7 @@ class TenderMasterController {
     if(newTender.associatedOpportunity){
       const opportunityId = newTender.associatedOpportunity
       const tenderId = newTender._id.toString()
+
       // send this in response for redux
       const opportunity = await updateAssociatedTenderInOpportunity(opportunityId, tenderId, session);
     }
@@ -138,8 +147,8 @@ class TenderMasterController {
     });
   });
 
-  // Update a TenderMaster by ID
-  static updateTenderMaster = catchAsyncError(async (req, res, next, session) => {
+    // Update a TenderMaster by ID
+    static updateTenderMaster = catchAsyncError(async (req, res, next, session) => {
     const { id } = req.params;
     let updateData = req.body;
     console.log("updating tender req :", updateData)

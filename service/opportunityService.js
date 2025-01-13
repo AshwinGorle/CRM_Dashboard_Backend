@@ -65,9 +65,15 @@ export const updateTotalRevenueAndExpectedSales = (opportunity)=>{
 export const updateAssociatedTenderInOpportunity = async (opportunityId, tenderId, session, confirmation = true) =>{
    if(!opportunityId || ! tenderId) throw new ServerError("NotFound", "opportunityId and tenderId needed to update tender in opportunity");
    const tender = await getTender(tenderId, `invalid tenderId for updateAssociatedTenderInOpportunity`,session)
-   let opportunity = await getOpportunity(opportunityId, `invalid oppId : ${opportunityId} in updateAssociatedTenderInOpportunity`, session)
+   let opportunity = await getOpportunity(opportunityId, `invalid oppId : ${opportunityId} in updateAssociatedTenderInOpportunity`, session);
+   const previousTender = await TenderMasterModel.findById(opportunity.associatedTender.toString());
    if(!confirmation && opportunity.associatedTender)  throw new ServerError("NotFound",`Do you want to overwrite tender:${tender.customId} in the opportunity: ${opportunity.customId}`)
    opportunity.associatedTender = tenderId;
+    if(previousTender){
+        previousTender.associatedOpportunity = null;
+        previousTender.client = null; // because client is automatic field in tender so if no opportunity means no client in tender
+        previousTender.save({session});
+   }
    opportunity.save({session});
    opportunity = await getOpportunity(opportunityId, `invalid oppId : ${opportunityId} in updateAssociatedTenderInOpportunity After updating opp.`, session)
    return opportunity

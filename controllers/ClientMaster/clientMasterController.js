@@ -310,6 +310,7 @@ class ClientMasterController {
     const { id } = req.params;
     let { confirm } = req.query;
     confirm = confirm == "true";
+    confirm = false // have to delete this line in production
     const client = await ClientMasterModel.findById(id).populate(
       "territory industry subIndustry incorporationType classification relationshipStatus"
     );

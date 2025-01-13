@@ -14,7 +14,7 @@ class TenderMasterController {
  
 
   static createTenderMaster = catchAsyncError(async (req, res, next, session) => {
-    const {
+    let {
       rfpDate,
       entryDate,
       enteredBy = req.user._id,
@@ -45,7 +45,7 @@ class TenderMasterController {
     
     // checking opportunity and if exists then we will replace the client with the client inside opportunity
     if(associatedOpportunity){
-      const opportunity = await OpportunityMasterModel.findById(associatedOpportunity);
+      let opportunity = await OpportunityMasterModel.findById(associatedOpportunity);
       if(!opportunity) throw new ServerError("invalid or deleted opportunity!");
       client = opportunity.client.toString();
     }

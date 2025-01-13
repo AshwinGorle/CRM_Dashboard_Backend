@@ -66,7 +66,12 @@ export const updateAssociatedTenderInOpportunity = async (opportunityId, tenderI
    if(!opportunityId || ! tenderId) throw new ServerError("NotFound", "opportunityId and tenderId needed to update tender in opportunity");
    const tender = await getTender(tenderId, `invalid tenderId for updateAssociatedTenderInOpportunity`,session)
    let opportunity = await getOpportunity(opportunityId, `invalid oppId : ${opportunityId} in updateAssociatedTenderInOpportunity`, session);
-   const previousTender = await TenderMasterModel.findById(opportunity.associatedTender.toString());
+
+   //handle previous tender of opportunity which is being inserted in this tender
+   let previousTender = null;
+   if(opportunity?.associatedTender){
+    previousTender = await TenderMasterModel.findById(opportunity?.associatedTender?.toString());
+   }
    if(!confirmation && opportunity.associatedTender)  throw new ServerError("NotFound",`Do you want to overwrite tender:${tender.customId} in the opportunity: ${opportunity.customId}`)
    opportunity.associatedTender = tenderId;
     if(previousTender){

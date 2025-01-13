@@ -25,8 +25,7 @@ import StageHistoryModel from "../../models/HistoryModels/StageHistoryModel.js";
 import SubStageHistoryModel from "../../models/HistoryModels/SubSageHistoryModel.js";
 import RevenueMasterModel from "../../models/RevenueMasterModel.js";
 class OpportunityController {
-
-  // we have commented associated tender in create and update opportunity 
+  // we have commented associated tender in create and update opportunity
   static createOpportunity = catchAsyncError(
     async (req, res, next, session) => {
       let {
@@ -57,7 +56,7 @@ class OpportunityController {
         );
       if (!client)
         throw new ClientError("requiredFields", "Client is Required!");
-        //Manual validation for entryDate
+      //Manual validation for entryDate
       entryDate = new Date(entryDate);
       if (isNaN(entryDate.getTime())) {
         return res
@@ -366,9 +365,13 @@ class OpportunityController {
 
       // Step 2: Fetch the associated tender using the `associatedTender` field
       const tender = opportunity.associatedTender
-        ? await TenderMasterModel.findById(
-            opportunity.associatedTender
-          ).session(session)
+        ? await TenderMasterModel.findById(opportunity.associatedTender)
+            .populate("stage")
+            .populate("bidManager", "firstName lastName avatar")
+            .populate("enteredBy", "firstName lastName avatar")
+            .populate("officer", "firstName lastName avatar")
+            .populate("associatedOpportunity", "customId projectName")
+            .session(session)
         : null;
 
       // Step 3: Fetch all stageHistory records associated with the opportunity

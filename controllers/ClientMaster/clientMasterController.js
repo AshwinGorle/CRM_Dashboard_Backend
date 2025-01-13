@@ -41,7 +41,7 @@ class ClientMasterController {
       classification,
       totalEmployeeStrength,
       itEmployeeStrength,
-      primaryRelationShip,
+      primaryRelationship,
       secondaryRelationship,
       relatedContacts,
       relationshipStatus,
@@ -94,7 +94,7 @@ class ClientMasterController {
       classification,
       totalEmployeeStrength,
       itEmployeeStrength,
-      primaryRelationShip,
+      primaryRelationship,
       secondaryRelationship,
       relatedContacts: [],
       relationshipStatus,
@@ -329,6 +329,8 @@ class ClientMasterController {
           populate: [
             { path: "bidManager", select: "firstName lastName avatar" },
             { path: "officer", select: "firstName lastName avatar" },
+            { path: "enteredBy", select: "firstName lastName avatar" },
+            { path: "associatedOpportunity", select: "customId projectName" },
             { path: "stage" },
           ],
         })

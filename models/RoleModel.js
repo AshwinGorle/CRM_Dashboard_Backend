@@ -17,6 +17,15 @@ const RoleSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const RoleModel = mongoose.model("Role", RoleSchema);
+// Pre-save hook to normalize the name to uppercase
+RoleSchema.pre("save", function (next) {
+  if (this.name) {
+    this.name = this.name.trim().toUpperCase();
+  }
+  next();
+});
 
-export default RoleModel;
+// Unique index for name
+RoleSchema.index({ name: 1 }, { unique: true });
+
+export default mongoose.model("Role", RoleSchema);

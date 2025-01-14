@@ -228,7 +228,7 @@ class AuthController {
       res.status(200).json({
         status: "success",
         message: "Login successful",
-        data: { user, token },
+        data: user,
         verified: true,
       });
     } catch (err) {

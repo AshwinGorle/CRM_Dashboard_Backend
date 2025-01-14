@@ -260,7 +260,7 @@ class TenderMasterController {
           message: "Tender and related entries fetched successfully",
           data: { tender: tender, confirm: confirm },
         });
-      }
+      } 
   
       // Deleting the tender if confirm is true
       let opportunity = null;

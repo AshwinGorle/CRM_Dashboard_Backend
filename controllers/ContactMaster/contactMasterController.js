@@ -2,9 +2,12 @@ import mongoose from "mongoose";
 import { clientError } from "../../config/responseMessage.js";
 import { catchAsyncError } from "../../middlewares/catchAsyncError.middleware.js";
 import ContactMasterModel from "../../models/ContactMasterModel.js";
-import { ServerError } from "../../utils/customErrorHandler.utils.js";
+import { ClientError, ServerError } from "../../utils/customErrorHandler.utils.js";
 import uploadAndGetAvatarUrl from "../../utils/uploadAndGetAvatarUrl.utils.js";
 import { getFilterOptions, getSortingOptions } from "../../utils/searchOptions.js";
+import BusinessDevelopmentModel from "../../models/BusinessDevelopmentModel.js";
+import ClientMasterModel from "../../models/ClientMasterModel.js";
+import RegistrationMasterModel from "../../models/RegistrationMasterModel.js";
 
 class ContactMasterController {
   static createContact = catchAsyncError(async (req, res, next) => {
@@ -178,17 +181,94 @@ class ContactMasterController {
     });
   });
 
-  static deleteContact = catchAsyncError(async (req, res, next) => {
+  static deleteContact = catchAsyncError(async (req, res, next, session) => {
     const { id } = req.params;
-
-    const contact = await ContactMasterModel.findByIdAndDelete(id);
-
-    res.status(200).json({
+    let { confirm } = req.query;
+    confirm = confirm === "true";
+    console.log("in delete contact-----------")
+    // Part 1: If `confirm` is false, return related details without deleting anything
+    if (!confirm) {
+      // Step 1: Fetch the contact while populating all its fields and validate its existence
+      const contact = await ContactMasterModel.findById(id)
+        .populate("enteredBy", "firstName lastName avatar")
+        .populate("client", "name avatar")
+        .populate("relationshipDegree")
+        .populate("territory")
+        .exec();
+  
+      if (!contact) {
+        throw new ClientError("NotFound","Contact not found");
+      }
+  
+      // Step 2: Fetch business developments where the contact is used
+      const businessDevelopments = await BusinessDevelopmentModel.find({ contact: id })
+        .populate("client", "name avatar")
+        .populate("enteredBy", "firstName lastName avatar")
+        .populate("salesChamp", "firstName lastName avatar")
+        .exec();
+  
+      // Step 3: Fetch clients where this contact is included in `relatedContacts`
+      const clients = await ClientMasterModel.find({ relatedContacts: id })
+        .populate("enteredBy", "firstName lastName avatar")
+        .populate("primaryRelationship", "firstName lastName avatar")
+        .populate("secondaryRelationship", "firstName lastName avatar")
+        .populate("industry territory subIndustry")
+        .exec();
+  
+      // Step 4: Fetch registrations where this contact is in the `primaryContact` field
+      const registrations = await RegistrationMasterModel.find({ primaryContact: id })
+        .populate("enteredBy", "firstName lastName avatar")
+        .populate("registrationChamp", "firstName lastName avatar")
+        .populate("client", "name avatar")
+        .exec();
+  
+      // Step 5: Return the data without performing deletions
+      return res.status(200).json({
+        status: "success",
+        message: "Contact-related entries fetched successfully",
+        data: { contact, clients, businessDevelopments, registrations, confirm },
+      });
+    }
+  
+    // Part 2: If `confirm` is true, perform the actual deletion
+    // Step 1: Fetch the contact and validate its existence
+    const contact = await ContactMasterModel.findById(id).exec();
+    if (!contact) {
+      throw  new ClientError("NotFound","contact not found");
+    }
+  
+    // Step 2: Set the `contact` field to null in related business developments
+    const businessDevelopments = await BusinessDevelopmentModel.updateMany(
+      { contact: id },
+      { $set: { contact: null } },
+      { session }
+    ).exec();
+  
+    // Step 3: Remove the contact ID from the `relatedContacts` array in clients
+    const clients = await ClientMasterModel.updateMany(
+      { relatedContacts: id },
+      { $pull: { relatedContacts: id } },
+      { session }
+    ).exec();
+  
+    // Step 4: Set the `primaryContact` field to null in related registrations
+    const registrations = await RegistrationMasterModel.updateMany(
+      { primaryContact: id },
+      { $set: { primaryContact: null } },
+      { session }
+    ).exec();
+  
+    // Step 5: Delete the contact
+    await ContactMasterModel.findByIdAndDelete(id, { session }).exec();
+    console.log("deletion success -------")
+    // Return the response with deleted and updated documents
+    return res.status(200).send({
       status: "success",
-      message: "Contact deleted successfully",
-      data: contact,
+      message: "Contact deleted while settling related entries",
+      data: { contact, clients, businessDevelopments, registrations, confirm },
     });
-  });
+  }, true);
+  
 }
 
 export default ContactMasterController;

@@ -360,7 +360,7 @@ class OpportunityController {
         session
       );
       if (!opportunity) {
-        return next(new AppError("Opportunity not found", 404));
+         throw  new ClientError("NotFound","Opportunity not found");
       }
 
       // Step 2: Fetch the associated tender using the `associatedTender` field

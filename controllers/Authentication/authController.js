@@ -31,6 +31,7 @@ class AuthController {
   };
 
   static signup = async (req, res, sendPassword = false) => {
+    console.log("user adding");
     const {
       firstName,
       lastName,
@@ -113,7 +114,16 @@ class AuthController {
           "stream"
         );
       }
-      await newUser.save();
+      const savedUser = await newUser.save();
+      const populatedUser = await UserModel.findById(savedUser._id).populate({
+        path: "role",
+        select: "name _id",
+      });
+
+      const sanitizedUser = populatedUser.toObject();
+      delete sanitizedUser.password;
+      delete sanitizedUser.otp;
+      delete sanitizedUser.otpExpiresAt;
       // Send OTP to user email
       if (sendPassword) {
         await sendEmail({
@@ -125,6 +135,7 @@ class AuthController {
           status: "success",
           message: `User created. Please verify the user.`,
           verified: false,
+          data: { user: sanitizedUser },
         });
       } else {
         await sendEmail({
@@ -136,6 +147,7 @@ class AuthController {
           status: "success",
           message: `User created. Please verify your email with the OTP sent.`,
           verified: false,
+          data: { user: sanitizedUser },
         });
       }
     } catch (err) {

@@ -8,12 +8,11 @@ const isSuperAdmin = (role) => role.name === "SUPER ADMIN";
 
 class UserController {
   static getAllUser = catchAsyncError(async (req, res, next) => {
-    console.log("getAll user called - allowed roleIds", req.allowedRoleIds);
-
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 12;
     const skip = (page - 1) * limit;
     const { config } = req.query;
+    console.log("limit", limit);
 
     // Check if config is provided and is true
     if (config === "true") {
@@ -40,22 +39,23 @@ class UserController {
     }
 
     const totalCount = await UserModel.countDocuments(baseQuery);
-    const users = await UserModel.find(baseQuery)
-      .populate("role")
+
+    const users = await UserModel.find({
+      _id: { $ne: req.user._id }, // Exclude the current user's ID
+    })
+      .populate({
+        path: "role",
+        match: { name: { $ne: "SUPER ADMIN" } }, // Exclude users with role name "SUPER ADMIN"
+      })
+      .select("-password")
       .limit(limit)
       .skip(skip)
-      .select("-password");
-
-    const usersWithoutSuperAdmin = users.filter(
-      (user) =>
-        user.role.name != "SUPER ADMIN" &&
-        user._id.toString() != req.user._id.toString()
-    );
+      .sort({ createdAt: -1 });
 
     return res.status(200).json({
       status: "success",
       message: "All user fetched successfully",
-      data: { page, limit, totalCount, users: usersWithoutSuperAdmin },
+      data: { page, limit, totalCount, users },
     });
   });
 
@@ -70,7 +70,10 @@ class UserController {
 
   static getUser = catchAsyncError(async (req, res, next) => {
     const id = req.params.id;
-    const user = await UserModel.findById(id).select("-password");
+    const user = await UserModel.findById(id).select("-password").populate({
+      path: "role", // Assuming 'roles' is the field that references the Role model
+      select: "name _id", // Only populate 'name' and '_id'
+    });
     if (!user) throw new ServerError("NotFound", "User");
     res.status(201).json({
       status: "success",
@@ -81,8 +84,10 @@ class UserController {
 
   static getUserProfile = catchAsyncError(async (req, res, next) => {
     const user = req.user;
-    const userId = user._id.toString()
-    const profile = await UserModel.findById(userId).populate('role industry solution territory');
+    const userId = user._id.toString();
+    const profile = await UserModel.findById(userId).populate(
+      "role industry solution territory"
+    );
     // const user = await UserModel.findById(id).select("-password");
     // if (!user) throw new ServerError("NotFound", "User");
     res.status(201).json({
@@ -127,10 +132,16 @@ class UserController {
       );
     }
     await user.save();
+    // Populate the roles field with name and _id
+    const updatedUser = await UserModel.findById(user._id).populate({
+      path: "role", // Assuming 'roles' is the field that references the Role model
+      select: "name _id", // Only populate 'name' and '_id'
+    });
+
     res.status(201).json({
       status: "success",
       message: "User updated successfully",
-      data: user,
+      data: updatedUser,
     });
   });
 

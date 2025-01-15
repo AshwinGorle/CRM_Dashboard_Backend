@@ -51,7 +51,8 @@ const checkPermissions = (resource, action, targetEntityId = null) => {
           return next();
         } else if (action == actionTypes.CREATE) {
           permission = role.permissions.find(
-            (perm) => perm.entity?.roleId?.toString() == targetEntityId
+            (perm) =>
+              perm.entity?.roleId?.toString() == targetEntityId?.toString()
           );
         } else {
           if (!targetEntityId) {

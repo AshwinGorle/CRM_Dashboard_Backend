@@ -60,12 +60,10 @@ class ClientMasterController {
       !incorporationType ||
       !annualRevenue
     ) {
-      return res
-        .status(400)
-        .json({
-          status: "failed",
-          message: "All required fields must be filled",
-        });
+      return res.status(400).json({
+        status: "failed",
+        message: "All required fields must be filled",
+      });
     }
 
     // Manual validation for entryDate
@@ -120,15 +118,23 @@ class ClientMasterController {
 
     // Save the instance after all modifications are done
     await newClient.save();
-    console.log("New client:", newClient);
 
-    res
-      .status(201)
-      .json({
-        status: "success",
-        message: "Client created successfully",
-        data: newClient,
-      });
+    const client = await ClientMasterModel.findById(newClient._id)
+      .populate("enteredBy")
+      .populate("industry")
+      .populate("subIndustry")
+      .populate("territory")
+      .populate("incorporationType")
+      .populate("classification")
+      .populate("primaryRelationship")
+      .populate("secondaryRelationship")
+      .populate("relationshipStatus");
+
+    res.status(201).json({
+      status: "success",
+      message: "Client created successfully",
+      data: client,
+    });
   });
 
   static getAllClient = catchAsyncError(async (req, res, next, session) => {
@@ -179,10 +185,9 @@ class ClientMasterController {
       .populate("territory")
       .populate("incorporationType")
       .populate("classification")
-      // .populate("primaryRelationship")
-      // .populate("secondaryRelationship")
+      .populate("primaryRelationship")
+      .populate("secondaryRelationship")
       .populate("relationshipStatus");
-    // .populate("relatedContacts");
 
     res.status(200).json({
       status: "success",
@@ -217,8 +222,8 @@ class ClientMasterController {
         "stream"
       );
     }
-
-    const updatedClientMaster = await client.save({ session });
+    await client.validate();
+    await client.save({ session });
     // on change of ( territory || name ) we have to update tenders and opportunities custom id associated with this client
     if (updateData.territory || updateData.name) {
       if (updateData.territory)
@@ -236,11 +241,22 @@ class ClientMasterController {
         session
       );
     }
+    // setTimeout(async () => {}, 1000);
+    let populatedClient = await ClientMasterModel.findById(id)
+      .populate("enteredBy")
+      .populate("industry")
+      .populate("subIndustry")
+      .populate("territory")
+      .populate("incorporationType")
+      .populate("classification")
+      .populate("primaryRelationship")
+      .populate("secondaryRelationship")
+      .populate("relationshipStatus");
 
     res.status(200).json({
       status: "success",
       message: "Client updated successfully",
-      data: updatedClientMaster,
+      data: populatedClient,
     });
   }, true);
 
@@ -310,10 +326,14 @@ class ClientMasterController {
     const { id } = req.params;
     let { confirm } = req.query;
     confirm = confirm == "true";
-    confirm = false // have to delete this line in production
-    const client = await ClientMasterModel.findById(id).populate(
-      "territory industry subIndustry incorporationType classification relationshipStatus"
-    ).populate("enteredBy", "firstName lastName avatar").populate("primaryRelationship", "firstName lastName avatar").populate("secondaryRelationship", "firstName lastName avatar")
+    confirm = false; // have to delete this line in production
+    const client = await ClientMasterModel.findById(id)
+      .populate(
+        "territory industry subIndustry incorporationType classification relationshipStatus"
+      )
+      .populate("enteredBy", "firstName lastName avatar")
+      .populate("primaryRelationship", "firstName lastName avatar")
+      .populate("secondaryRelationship", "firstName lastName avatar");
     if (!client) {
       return res.status(404).json({
         status: "fail",
@@ -359,7 +379,7 @@ class ClientMasterController {
           opportunities,
           registrations,
           businessDevelopments,
-          confirm : confirm
+          confirm: confirm,
         },
       });
     }
@@ -437,7 +457,7 @@ class ClientMasterController {
         opportunities,
         registrations,
         businessDevelopments,
-        confirm : confirm
+        confirm: confirm,
       },
     });
   }, true);

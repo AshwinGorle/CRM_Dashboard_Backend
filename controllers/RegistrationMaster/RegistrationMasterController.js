@@ -1,7 +1,10 @@
 import mongoose from "mongoose";
 import RegistrationMasterModel from "../../models/RegistrationMasterModel.js";
 import { catchAsyncError } from "../../middlewares/catchAsyncError.middleware.js";
-import { ClientError, ServerError } from "../../utils/customErrorHandler.utils.js";
+import {
+  ClientError,
+  ServerError,
+} from "../../utils/customErrorHandler.utils.js";
 import {
   getFilterOptions,
   getSortingOptions,
@@ -62,10 +65,20 @@ class RegistrationMasterController {
 
     // Save the instance
     await newRegistration.save();
+
+    const populatedRegistration = await RegistrationMasterModel.findById(
+      newRegistration._id
+    )
+      .populate("client")
+      .populate("enteredBy")
+      .populate("registrationChamp")
+      .populate("primaryContact")
+      .populate("status");
+
     res.status(201).json({
       status: "success",
       message: "Registration created successfully",
-      data: newRegistration,
+      data: populatedRegistration,
     });
   });
 
@@ -134,8 +147,15 @@ class RegistrationMasterController {
         registrationMaster[key] = updateData[key];
       }
     });
+    console.log("updateData", updateData);
+    await registrationMaster.save();
 
-    const updatedRegistrationMaster = await registrationMaster.save();
+    const updatedRegistrationMaster = await RegistrationMasterModel.findById(id)
+      .populate("client")
+      .populate("enteredBy")
+      .populate("registrationChamp")
+      .populate("primaryContact")
+      .populate("status");
 
     res.status(200).json({
       status: "success",
@@ -145,63 +165,69 @@ class RegistrationMasterController {
   });
 
   // Delete a RegistrationMaster by ID
-  static deleteRegistrationMaster = catchAsyncError(async (req, res, next, session) => {
-    console.log("delete registration ")
-    const { id } = req.params;
-    let { confirm } = req.query;
-    confirm = confirm == "true" ? true : false;
-    console.log("confirm-------",confirm)
-    if (!confirm) {
-      const registration = await RegistrationMasterModel.findById(id)
-      .populate("registrationChamp", "firstName lastName avatar")
-      .populate("enteredBy", "firstName lastName avatar")
-      .populate("status")
-      .populate({
-        path: "client",
-        populate: [
-          { path: "enteredBy", select: "firstName lastName avatar" },
-          { path: "primaryRelationship", select: "firstName lastName avatar" },
-          {
-            path: "secondaryRelationship",
-            select: "firstName lastName avatar",
+  static deleteRegistrationMaster = catchAsyncError(
+    async (req, res, next, session) => {
+      console.log("delete registration ");
+      const { id } = req.params;
+      let { confirm } = req.query;
+      confirm = confirm == "true" ? true : false;
+      console.log("confirm-------", confirm);
+      if (!confirm) {
+        const registration = await RegistrationMasterModel.findById(id)
+          .populate("registrationChamp", "firstName lastName avatar")
+          .populate("enteredBy", "firstName lastName avatar")
+          .populate("status")
+          .populate({
+            path: "client",
+            populate: [
+              { path: "enteredBy", select: "firstName lastName avatar" },
+              {
+                path: "primaryRelationship",
+                select: "firstName lastName avatar",
+              },
+              {
+                path: "secondaryRelationship",
+                select: "firstName lastName avatar",
+              },
+              { path: "territory" },
+              { path: "industry" },
+              { path: "subIndustry" },
+              { path: "incorporationType" },
+              { path: "classification" },
+              { path: "relationshipStatus" },
+            ],
+          });
+        if (!registration)
+          throw new ClientError("NotFound", "Registration not found!");
+
+        return res.status(200).send({
+          status: "success",
+          message: "Registration and related entires fetched successfully",
+          data: {
+            confirm,
+            registration,
           },
-          { path: "territory" },
-          { path: "industry" },
-          { path: "subIndustry" },
-          { path: "incorporationType" },
-          { path: "classification" },
-          { path: "relationshipStatus" },
-        ],
-      });
+        });
+      }
+
+      const registration = await RegistrationMasterModel.findByIdAndDelete(id)
+        .populate("enteredBy")
+        .session(session);
+
       if (!registration)
         throw new ClientError("NotFound", "Registration not found!");
 
-      return res.status(200).send({
+      res.status(200).send({
         status: "success",
-        message: "Registration and related entires fetched successfully",
+        message: "RegistrationMaster deleted successfully",
         data: {
           confirm,
-          registration
+          registration,
         },
       });
-    }
-
-    const registration = await RegistrationMasterModel.findByIdAndDelete(
-      id
-    ).populate("enteredBy").session(session);
-
-    if (!registration)
-      throw new ClientError("NotFound", "Registration not found!");
-
-    res.status(200).send({
-      status: "success",
-      message: "RegistrationMaster deleted successfully",
-      data: {
-        confirm,
-        registration
-      },
-    });
-  }, true);
+    },
+    true
+  );
 }
 
 export default RegistrationMasterController;

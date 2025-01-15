@@ -313,7 +313,7 @@ class ClientMasterController {
     confirm = false // have to delete this line in production
     const client = await ClientMasterModel.findById(id).populate(
       "territory industry subIndustry incorporationType classification relationshipStatus"
-    );
+    ).populate("enteredBy", "firstName lastName avatar").populate("primaryRelationship", "firstName lastName avatar").populate("secondaryRelationship", "firstName lastName avatar")
     if (!client) {
       return res.status(404).json({
         status: "fail",

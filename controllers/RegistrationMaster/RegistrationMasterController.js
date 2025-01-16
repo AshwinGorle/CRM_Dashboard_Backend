@@ -116,10 +116,11 @@ class RegistrationMasterController {
     const { id } = req.params;
 
     const registrationMaster = await RegistrationMasterModel.findById(id)
-      // .populate("client")
-      .populate("enteredBy");
-    // .populate("registrationChamp")
-    // .populate("primaryContact");
+      .populate("client")
+      .populate("enteredBy")
+      .populate("registrationChamp")
+      .populate("primaryContact")
+      .populate("status");
 
     if (!registrationMaster)
       throw new ServerError("NotFound", "RegistrationMaster");

@@ -1,9 +1,15 @@
 import mongoose from "mongoose";
 import { catchAsyncError } from "../../middlewares/catchAsyncError.middleware.js";
 import BusinessDevelopmentModel from "../../models/BusinessDevelopmentModel.js";
-import { ClientError, ServerError } from "../../utils/customErrorHandler.utils.js";
+import {
+  ClientError,
+  ServerError,
+} from "../../utils/customErrorHandler.utils.js";
 import { checkForPotentialRevenue } from "../../utils/BD.utils.js";
-import { getFilterOptions, getSortingOptions } from "../../utils/searchOptions.js";
+import {
+  getFilterOptions,
+  getSortingOptions,
+} from "../../utils/searchOptions.js";
 
 class BusinessDevelopmentController {
   static createBusinessDevelopment = catchAsyncError(async (req, res, next) => {
@@ -22,7 +28,7 @@ class BusinessDevelopmentController {
       potentialTopLine,
       potentialOffset,
       Notes,
-      createdAt
+      createdAt,
     } = req.body;
 
     // Validate required fields
@@ -55,20 +61,34 @@ class BusinessDevelopmentController {
       potentialTopLine,
       potentialOffset,
       Notes,
-      createdAt
+      createdAt,
     });
-    newBusinessDevelopment.potentialRevenue = checkForPotentialRevenue(newBusinessDevelopment);
-    console.log("bd after creating potential Revenue : ", newBusinessDevelopment);
+    newBusinessDevelopment.potentialRevenue = checkForPotentialRevenue(
+      newBusinessDevelopment
+    );
+    console.log(
+      "bd after creating potential Revenue : ",
+      newBusinessDevelopment
+    );
 
     await newBusinessDevelopment.save();
 
-    res
-      .status(201)
-      .json({
-        status: "success",
-        message: "Business Development created successfully",
-        data: newBusinessDevelopment,
-      });
+    const populatedBusinessDevelopment =
+      await BusinessDevelopmentModel.findById(newBusinessDevelopment._id)
+        .populate("client")
+        .populate("enteredBy")
+        .populate("contact")
+        .populate("solution")
+        .populate("subSolution")
+        .populate("industry")
+        .populate("territory")
+        .populate("salesChamp");
+
+    res.status(201).json({
+      status: "success",
+      message: "Business Development created successfully",
+      data: populatedBusinessDevelopment,
+    });
   });
 
   static getAllBusinessDevelopments = catchAsyncError(
@@ -77,10 +97,17 @@ class BusinessDevelopmentController {
       const page = parseInt(req.query.page) || 1;
       const skip = (page - 1) * limit;
       const filterOptions = getFilterOptions(req.query);
-    const sortingOptions = getSortingOptions(req.query);
-      const totalCount = await BusinessDevelopmentModel.countDocuments(filterOptions);
-      
-      const businessDevelopments = await BusinessDevelopmentModel.find(filterOptions).sort(sortingOptions).skip(skip).limit(limit)
+      const sortingOptions = getSortingOptions(req.query);
+      const totalCount = await BusinessDevelopmentModel.countDocuments(
+        filterOptions
+      );
+
+      const businessDevelopments = await BusinessDevelopmentModel.find(
+        filterOptions
+      )
+        .sort(sortingOptions)
+        .skip(skip)
+        .limit(limit)
         .populate("client")
         .populate("enteredBy")
         .populate("contact")
@@ -93,7 +120,7 @@ class BusinessDevelopmentController {
       res.status(200).json({
         status: "success",
         message: "All Business Developments retrieved successfully",
-        data: {page, limit, totalCount, businessDevelopments}
+        data: { page, limit, totalCount, businessDevelopments },
       });
     }
   );
@@ -102,14 +129,14 @@ class BusinessDevelopmentController {
     async (req, res, next) => {
       const { id } = req.params;
       const businessDevelopment = await BusinessDevelopmentModel.findById(id)
-        // .populate("client")
-        // .populate("enteredBy")
-        // .populate("contact")
+        .populate("client")
+        .populate("enteredBy")
+        .populate("contact")
         .populate("solution")
         .populate("subSolution")
         .populate("industry")
         .populate("territory")
-        // .populate("salesChamp");
+        .populate("salesChamp");
 
       if (!businessDevelopment)
         throw new ServerError("NotFound", "Business Development");
@@ -133,88 +160,106 @@ class BusinessDevelopmentController {
     Object.keys(updateData).forEach((key) => {
       businessDevelopment[key] = updateData[key];
     });
-    businessDevelopment.potentialRevenue = checkForPotentialRevenue(businessDevelopment); 
+    businessDevelopment.potentialRevenue =
+      checkForPotentialRevenue(businessDevelopment);
     console.log("bd after updating potential Revenue : ", businessDevelopment);
-    const updatedBusinessDevelopment = await businessDevelopment.save();
+    await businessDevelopment.save();
+
+    const populatedBusinessDevelopment =
+      await BusinessDevelopmentModel.findById(id)
+        .populate("client")
+        .populate("enteredBy")
+        .populate("contact")
+        .populate("solution")
+        .populate("subSolution")
+        .populate("industry")
+        .populate("territory")
+        .populate("salesChamp");
 
     res.status(200).json({
       status: "success",
       message: "Business Development updated successfully",
-      data: updatedBusinessDevelopment,
+      data: populatedBusinessDevelopment,
     });
   });
 
-//   static deleteBusinessDevelopment = catchAsyncError(async (req, res, next) => {
-//     const { id } = req.params;
+  //   static deleteBusinessDevelopment = catchAsyncError(async (req, res, next) => {
+  //     const { id } = req.params;
 
-//     const businessDevelopment =
-//       await BusinessDevelopmentModel.findByIdAndDelete(id);
+  //     const businessDevelopment =
+  //       await BusinessDevelopmentModel.findByIdAndDelete(id);
 
-//     res.status(200).json({
-//       status: "success",
-//       message: "Business Development deleted successfully",
-//       data: businessDevelopment,
-//     });
-//   });
-// }
+  //     res.status(200).json({
+  //       status: "success",
+  //       message: "Business Development deleted successfully",
+  //       data: businessDevelopment,
+  //     });
+  //   });
+  // }
 
-static deleteBusinessDevelopment = catchAsyncError(async (req, res, next, session) => {
-  console.log("delete businessDevelopment ")
-  const { id } = req.params;
-  let { confirm } = req.query;
-  confirm = confirm == "true" ? true : false;
-  console.log("confirm-------",confirm)
-  if (!confirm) {
-    const businessDevelopment = await BusinessDevelopmentModel.findById(id)
-    .populate("enteredBy", "firstName lastName avatar")
-    .populate("solution subSolution territory industry")
-    .populate({
-      path: "client",
-      populate: [
-        { path: "enteredBy", select: "firstName lastName avatar" },
-        { path: "primaryRelationship", select: "firstName lastName avatar" },
-        {
-          path: "secondaryRelationship",
-          select: "firstName lastName avatar",
+  static deleteBusinessDevelopment = catchAsyncError(
+    async (req, res, next, session) => {
+      console.log("delete businessDevelopment ");
+      const { id } = req.params;
+      let { confirm } = req.query;
+      confirm = confirm == "true" ? true : false;
+      console.log("confirm-------", confirm);
+      if (!confirm) {
+        const businessDevelopment = await BusinessDevelopmentModel.findById(id)
+          .populate("enteredBy", "firstName lastName avatar")
+          .populate("solution subSolution territory industry")
+          .populate({
+            path: "client",
+            populate: [
+              { path: "enteredBy", select: "firstName lastName avatar" },
+              {
+                path: "primaryRelationship",
+                select: "firstName lastName avatar",
+              },
+              {
+                path: "secondaryRelationship",
+                select: "firstName lastName avatar",
+              },
+              { path: "territory" },
+              { path: "industry" },
+              { path: "subIndustry" },
+              { path: "incorporationType" },
+              { path: "classification" },
+              { path: "relationshipStatus" },
+            ],
+          });
+        if (!businessDevelopment)
+          throw new ClientError("NotFound", "Registration not found!");
+
+        return res.status(200).send({
+          status: "success",
+          message: "Registration and related entires fetched successfully",
+          data: {
+            confirm,
+            businessDevelopment,
+          },
+        });
+      }
+
+      const businessDevelopment =
+        await BusinessDevelopmentModel.findByIdAndDelete(id)
+          .populate("enteredBy")
+          .session(session);
+
+      if (!businessDevelopment)
+        throw new ClientError("NotFound", "Registration not found!");
+
+      res.status(200).send({
+        status: "success",
+        message: "RegistrationMaster deleted successfully",
+        data: {
+          confirm,
+          businessDevelopment,
         },
-        { path: "territory" },
-        { path: "industry" },
-        { path: "subIndustry" },
-        { path: "incorporationType" },
-        { path: "classification" },
-        { path: "relationshipStatus" },
-      ],
-    });
-    if (!businessDevelopment)
-      throw new ClientError("NotFound", "Registration not found!");
-
-    return res.status(200).send({
-      status: "success",
-      message: "Registration and related entires fetched successfully",
-      data: {
-        confirm,
-        businessDevelopment
-      },
-    });
-  }
-
-  const businessDevelopment = await BusinessDevelopmentModel.findByIdAndDelete(
-    id
-  ).populate("enteredBy").session(session);
-
-  if (!businessDevelopment) 
-    throw new ClientError("NotFound", "Registration not found!");
-
-  res.status(200).send({
-    status: "success",
-    message: "RegistrationMaster deleted successfully",
-    data: {
-      confirm,
-      businessDevelopment
+      });
     },
-  });
-}, true);
+    true
+  );
 }
-
 
 export default BusinessDevelopmentController;

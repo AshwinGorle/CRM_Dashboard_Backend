@@ -243,6 +243,7 @@ class ClientMasterController {
     }
     // setTimeout(async () => {}, 1000);
     let populatedClient = await ClientMasterModel.findById(id)
+      .session(session)
       .populate("enteredBy")
       .populate("industry")
       .populate("subIndustry")

@@ -120,10 +120,24 @@ class OpportunityController {
       newOpportunity.stageHistory.push(newStageHistoryId);
       await newOpportunity.save({ session });
 
+      const populatedOpportunity = await OpportunityMasterModel.findById(
+        newOpportunity._id
+      )
+        .session(session)
+        .populate("enteredBy")
+        .populate("associatedTender")
+        .populate("solution")
+        .populate("subSolution")
+        .populate("salesChamp")
+        .populate("salesStage")
+        .populate("salesSubStage")
+        .populate("revenue")
+        .populate("client");
+
       return res.status(201).json({
         status: "success",
         message: "Opportunity created successfully",
-        data: newOpportunity,
+        data: populatedOpportunity,
       });
     },
     true
@@ -196,11 +210,12 @@ class OpportunityController {
   static getOpportunityById = catchAsyncError(async (req, res, next) => {
     const { id } = req.params;
     let opportunity = await OpportunityMasterModel.findById(id)
-      // .populate("enteredBy")
-      // .populate("associatedTender")
+      .populate("enteredBy")
+      .populate("client")
+      .populate("associatedTender")
       .populate("solution")
       .populate("subSolution")
-      // .populate("salesChamp")
+      .populate("salesChamp")
       .populate("salesStage")
       .populate("salesSubStage")
       .populate("revenue")
@@ -339,10 +354,22 @@ class OpportunityController {
         await updateLifeTimeValueOfClient(updatedOpportunity.client, session);
       }
 
+      const populatedOpportunity = await OpportunityMasterModel.findById(id)
+        .session(session)
+        .populate("enteredBy")
+        .populate("associatedTender")
+        .populate("solution")
+        .populate("subSolution")
+        .populate("salesChamp")
+        .populate("salesStage")
+        .populate("salesSubStage")
+        .populate("client")
+        .populate("revenue");
+
       res.status(200).json({
         status: "success",
         message: "Opportunity updated successfully",
-        data: updatedOpportunity,
+        data: populatedOpportunity,
       });
     },
     true

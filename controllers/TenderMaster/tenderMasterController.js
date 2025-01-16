@@ -95,13 +95,13 @@ class TenderMasterController {
       if (client) newTender.customId = await getTenderIdWithoutClient(client); // handling custom tender Id
 
       // Save the instance
+
       await newTender.save({ session });
 
       //We have to put this tender in corresponding opportunity
       if (newTender.associatedOpportunity) {
         const opportunityId = newTender.associatedOpportunity;
         const tenderId = newTender._id.toString();
-
         // send this in response for redux
         const opportunity = await updateAssociatedTenderInOpportunity(
           opportunityId,
@@ -110,10 +110,19 @@ class TenderMasterController {
         );
       }
 
+      const populatedTender = await TenderMasterModel.findById(newTender._id)
+        .session(session)
+        .populate("enteredBy")
+        .populate("client")
+        .populate("associatedOpportunity")
+        .populate("officer")
+        .populate("bidManager")
+        .populate("stage");
+
       res.status(201).json({
         status: "success",
         message: "Tender created successfully",
-        data: newTender,
+        data: populatedTender,
       });
     },
     true
@@ -157,11 +166,11 @@ class TenderMasterController {
     const { id } = req.params;
 
     const tenderMaster = await TenderMasterModel.findById(id)
-      // .populate("enteredBy")
-      // .populate("client")
-      // .populate("associatedOpportunity")
-      // .populate("officer")
-      // .populate("bidManager")
+      .populate("enteredBy")
+      .populate("client")
+      .populate("associatedOpportunity")
+      .populate("officer")
+      .populate("bidManager")
       .populate("stage");
 
     if (!tenderMaster) throw new ServerError("NotFound", "TenderMaster");
@@ -178,7 +187,7 @@ class TenderMasterController {
     async (req, res, next, session) => {
       const { id } = req.params;
       let updateData = req.body;
-      if(!id) throw new ServerError("Tender id is required to update tender")
+      if (!id) throw new ServerError("Tender id is required to update tender");
       console.log("updating tender req :", updateData);
 
       const tenderMaster = await TenderMasterModel.findById(id);
@@ -189,7 +198,7 @@ class TenderMasterController {
 
       // checking for submission date
       if (updateData.stage)
-          tenderMaster.submissionDate = await checkForSubmissionDate(
+        tenderMaster.submissionDate = await checkForSubmissionDate(
           updateData.stage
         ); // handling submission date
 
@@ -215,12 +224,21 @@ class TenderMasterController {
         // send this opportunity in response while maintaining redux
       }
 
-      const updatedTenderMaster = await tenderMaster.save({ session });
+      await tenderMaster.save({ session });
+
+      const populatedTender = await TenderMasterModel.findById(id)
+        .session(session)
+        .populate("enteredBy")
+        .populate("client")
+        .populate("associatedOpportunity")
+        .populate("officer")
+        .populate("bidManager")
+        .populate("stage");
 
       res.status(200).json({
         status: "success",
         message: "Tender updated successfully",
-        data: updatedTenderMaster,
+        data: populatedTender,
       });
     },
     true
@@ -233,43 +251,48 @@ class TenderMasterController {
       let { confirm } = req.query;
       confirm = confirm == "true" ? true : false;
       if (!id) throw new ServerError("To delete tender id is required");
-  
+
       // Fetch the tender only if confirmation is not provided
       if (!confirm) {
-        const tender = await TenderMasterModel.findById(id).populate({
-          path: "associatedOpportunity",
-          populate: [
-            { path: "enteredBy", select: "firstName lastName avatar" },
-            { path: "solution" },
-            { path: "subSolution" },
-            { path: "salesStage" },
-            { path: "salesSubStage" },
-            { path: "client", select: "name avatar" },
-            { path: "salesChamp", select: "firstName lastName avatar" },
-          ],
-        })
-        .populate('stage')
-        .populate('bidManager', "firstName lastName avatar")
-        .populate('enteredBy', "firstName lastName avatar")
-        .populate('officer', "firstName lastName avatar");
+        const tender = await TenderMasterModel.findById(id)
+          .populate({
+            path: "associatedOpportunity",
+            populate: [
+              { path: "enteredBy", select: "firstName lastName avatar" },
+              { path: "solution" },
+              { path: "subSolution" },
+              { path: "salesStage" },
+              { path: "salesSubStage" },
+              { path: "client", select: "name avatar" },
+              { path: "salesChamp", select: "firstName lastName avatar" },
+            ],
+          })
+          .populate("stage")
+          .populate("bidManager", "firstName lastName avatar")
+          .populate("enteredBy", "firstName lastName avatar")
+          .populate("officer", "firstName lastName avatar");
 
-        if(!tender) throw new ClientError("NotFound","Tender not found!")
-  
+        if (!tender) throw new ClientError("NotFound", "Tender not found!");
+
         return res.status(200).json({
           status: "success",
           message: "Tender and related entries fetched successfully",
           data: { tender: tender, confirm: confirm },
         });
-      } 
-  
+      }
+
       // Deleting the tender if confirm is true
       let opportunity = null;
-      const deletedTender = await TenderMasterModel.findByIdAndDelete(id).session(session);
+      const deletedTender = await TenderMasterModel.findByIdAndDelete(
+        id
+      ).session(session);
       if (!deletedTender) throw new ServerError("Tender not found");
-  
+
       // Remove the tender from the associated opportunity
       if (deletedTender?.associatedOpportunity) {
-        opportunity = await OpportunityMasterModel.findById(deletedTender?.associatedOpportunity)
+        opportunity = await OpportunityMasterModel.findById(
+          deletedTender?.associatedOpportunity
+        )
           .populate("enteredBy")
           .populate("associatedTender")
           .populate("solution")
@@ -285,24 +308,23 @@ class TenderMasterController {
           await opportunity.save({ session });
         }
       }
-  
+
       // Ensure we don't return the session object which could lead to circular structure
       const responseData = {
         tender: deletedTender ? deletedTender.toObject() : null, // Convert to plain object
         opportunity: opportunity ? opportunity.toObject() : null, // Convert to plain object
         confirm: confirm,
       };
-  
+
       res.status(200).json({
         status: "success",
         message: "Tender and related entries updated successfully",
         data: responseData,
-        confirm
+        confirm,
       });
     },
     true
   );
-  
 }
 
 export default TenderMasterController;

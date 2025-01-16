@@ -11,6 +11,7 @@ import {
   deleteEntity,
 } from "./roleEntityController.js";
 import mongoose from "mongoose";
+import UserModel from "../../models/UserModel.js";
 
 class RoleController {
   static getAllRole = catchAsyncError(async (req, res, next) => {
@@ -253,19 +254,51 @@ class RoleController {
   }, true);
 
   static deleteRole = catchAsyncError(async (req, res, next, session) => {
-    const id = req.params.id;
-    const role = await RoleModel.findByIdAndDelete(id, { session });
+    const { id } = req.params;
+    let { confirm } = req.query;
+    confirm = confirm == "true";
+
+    // Step 1: Find and validate the role to delete
+    const role = await RoleModel.findById(id)
+      .populate({
+        path: "permissions.entity",
+      })
+      .session(session);
 
     if (!role) {
       throw new ClientError("NotFound", "Role not found");
     }
 
-    await deleteEntity(role, session);
+    // Step 2 Fetch all users with this role
+    const users = await UserModel.find({ role: id }).session(session);
+    if (!confirm) {
+      return res.status(200).send({
+        status: "success",
+        message: "Role and related entries fetched successfully",
+        data: { users, role, confirm },
+      });
+    }
 
-    res.status(201).json({
+    // Step 4: Update each user's role field to `null` and save them
+    const updatedUsers = await Promise.all(
+      users.map(async (user) => {
+        user.role = null;
+        return user.save({ session });
+      })
+    );
+
+    // Step 5: Delete the role
+    await RoleModel.findByIdAndDelete(id, { session });
+
+    // Step 6: Respond with the deleted role and updated users
+    res.status(200).json({
       status: "success",
-      message: "Role deleted successfully",
-      data: role,
+      message: "Role deleted successfully, and related users updated",
+      data: {
+        role,
+        user: updatedUsers,
+        confirm
+      },
     });
   }, true);
 }

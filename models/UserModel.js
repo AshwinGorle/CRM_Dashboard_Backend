@@ -35,7 +35,7 @@ const UserSchema = new mongoose.Schema(
     },
     phoneCountryCode: {
       type: String,
-      required: true,
+      // required: true, // make true in production
     },
     email: {
       type: String,

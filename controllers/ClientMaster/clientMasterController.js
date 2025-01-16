@@ -1,11 +1,7 @@
-import mongoose from "mongoose";
-import { clientError } from "../../config/responseMessage.js";
 import { catchAsyncError } from "../../middlewares/catchAsyncError.middleware.js";
 import ClientMasterModel from "../../models/ClientMasterModel.js";
-import { getClient } from "../../utils/client.utils.js";
 import { ServerError } from "../../utils/customErrorHandler.utils.js";
 import OpportunityMasterModel from "../../models/OpportunityMasterModel.js";
-import ContactMasterModel from "../../models/ContactMasterModel.js";
 import uploadAndGetAvatarUrl from "../../utils/uploadAndGetAvatarUrl.utils.js";
 import { getClientId } from "../../utils/client.utils.js";
 import {
@@ -187,7 +183,7 @@ class ClientMasterController {
       .populate("classification")
       .populate("primaryRelationship")
       .populate("secondaryRelationship")
-      .populate("relationshipStatus");
+      .populate("relationshipStatus")
 
     res.status(200).json({
       status: "success",

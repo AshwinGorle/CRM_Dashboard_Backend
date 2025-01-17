@@ -16,7 +16,9 @@ class UserController {
 
     // Check if config is provided and is true
     if (config === "true") {
-      const users = await UserModel.find().select("firstName lastName");
+      const users = await UserModel.find({
+        $or: [{ isDeleted: null }, { isDeleted: false }],
+      }).select("firstName lastName");
       return res.status(200).json({
         status: "success",
         message: "Config users fetched successfully",
@@ -41,7 +43,10 @@ class UserController {
     const totalCount = await UserModel.countDocuments(baseQuery);
 
     const users = await UserModel.find({
-      _id: { $ne: req.user._id }, // Exclude the current user's ID
+      $and: [
+        { _id: { $ne: req.user._id } },
+        { $or: [{ isDeleted: null }, { isDeleted: false }] },
+      ],
     })
       .populate({
         path: "role",
@@ -147,11 +152,21 @@ class UserController {
 
   static deleteUser = catchAsyncError(async (req, res, next) => {
     const id = req.params.id;
-    const user = await UserModel.findByIdAndDelete(id);
+    let { undo } = req.query;
+    undo = undo == "true";
+    const deleteStatus = !undo;
+
+    if (id == req.user._id.toString())
+      throw new ServerError("Not Allowed", "You can not delete yourself");
+    const user = await UserModel.findByIdAndUpdate(
+      id,
+      { isDeleted: deleteStatus },
+      { new: true }
+    );
     res.status(201).json({
       status: "success",
       message: "User deleted successfully",
-      data: user,
+      data: { user },
     });
   });
 }

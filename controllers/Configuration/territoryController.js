@@ -16,7 +16,9 @@ class TerritoryController {
 
     // Get all territories
     static getAllTerritory = catchAsyncError(async (req, res, next) => {
-        const territories = await TerritoryModel.find();
+        const territories = await TerritoryModel.find({
+            $or: [{ isDeleted: null }, { isDeleted: false }],
+          });
         res.status(200).json({
             status: 'success',
             message: 'All Territory s retrieved successfully',
@@ -58,13 +60,17 @@ class TerritoryController {
     // Delete Territory
     static deleteTerritory = catchAsyncError(async (req, res, next) => {
         const { id } = req.params;
+        let { undo } = req.query;
+        undo = undo == "true";
+        const deleteStatus = !undo; 
+
     
-        const territory = await TerritoryModel.findByIdAndDelete(id);
+        const territory = await TerritoryModel.findByIdAndUpdate(id, {isDeleted: deleteStatus} , {new : true});
     
         res.status(200).json({
             status: 'success',
             message: 'Territory  deleted successfully',
-            data: territory
+            data: {territory}
         });
     });
 }

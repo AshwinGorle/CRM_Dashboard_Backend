@@ -16,7 +16,9 @@ class IndustryController {
 
     // Get all IndustryMasters
     static getAllIndustry = catchAsyncError(async (req, res, next) => {
-        const industryMasters = await IndustryMasterModel.find();
+        const industryMasters = await IndustryMasterModel.find({
+            $or: [{ isDeleted: null }, { isDeleted: false }],
+          });
         res.status(200).json({
             status: 'success',
             message: 'All Industry Masters retrieved successfully',
@@ -58,13 +60,17 @@ class IndustryController {
     // Delete IndustryMaster
     static deleteIndustry = catchAsyncError(async (req, res, next) => {
         const { id } = req.params;
-    
-        const industryMaster = await IndustryMasterModel.findByIdAndDelete(id);
+        let { undo } = req.query;
+        undo = undo == "true";
+        const deleteStatus = !undo; 
+
+
+        const industryMaster = await IndustryMasterModel.findByIdAndUpdate(id ,{isDeleted : deleteStatus }, { new : true});
     
         res.status(200).json({
             status: 'success',
             message: 'Industry Master deleted successfully',
-            data: industryMaster
+            data: {industry : industryMaster}
         });
     });
 }

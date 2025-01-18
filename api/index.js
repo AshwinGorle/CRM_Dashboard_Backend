@@ -45,7 +45,7 @@ const DB_URL = process.env.DATABASE2_URL;
 connectDb(DB_URL);
 
 app.get("/", homePage);
-app.use("/target", targetRouter)
+app.use("/target", targetRouter);
 app.use("/system", systemRouter);
 app.use("/auth", authRouter);
 app.use(authenticateToken);

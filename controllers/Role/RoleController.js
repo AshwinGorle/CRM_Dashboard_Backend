@@ -38,14 +38,18 @@ class RoleController {
   static getAllEntities = catchAsyncError(async (req, res, next) => {
     const entities = await EntityModel.find();
 
-    if (!entities || entities.length === 0) {
+    const filteredEntities = entities?.filter(
+      (entity) => entity.entity != "SUPER ADMIN" && entity.entity != "ADMIN"
+    );
+
+    if (!filteredEntities || filteredEntities.length === 0) {
       throw new ServerError("NotFound", "Entities not found");
     }
 
     res.status(200).json({
       status: "success",
       message: "Entities fetched successfully",
-      data: entities,
+      data: filteredEntities,
     });
   });
 
@@ -99,9 +103,9 @@ class RoleController {
       throw new ClientError("Duplicate", "Role name already exists");
     }
 
-    const trimedName = roleName.trim().toUpperCase();
+    const trimmedName = roleName.trim().toUpperCase();
     // // Create new role
-    const newRole = await RoleModel.create([{ name: trimedName }], {
+    const newRole = await RoleModel.create([{ name: trimmedName }], {
       session,
     });
 
@@ -289,6 +293,7 @@ class RoleController {
 
     // Step 5: Delete the role
     await RoleModel.findByIdAndDelete(id, { session });
+    await deleteEntity(role, session);
 
     // Step 6: Respond with the deleted role and updated users
     res.status(200).json({

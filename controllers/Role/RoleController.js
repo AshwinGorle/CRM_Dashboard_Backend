@@ -112,7 +112,7 @@ class RoleController {
     res.status(201).json({
       success: true,
       message: "Role created successfully",
-      role: newRole[0],
+      data: newRole[0],
     });
   }, true);
 
@@ -297,7 +297,7 @@ class RoleController {
       data: {
         role,
         user: updatedUsers,
-        confirm
+        confirm,
       },
     });
   }, true);

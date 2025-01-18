@@ -16,7 +16,9 @@ class SolutionController {
 
     // Get all SolutionMasters
     static getAllSolution = catchAsyncError(async (req, res, next) => {
-        const solutionMasters = await SolutionModel.find();
+        const solutionMasters = await SolutionModel.find({
+            $or: [{ isDeleted: null }, { isDeleted: false }],
+          });
         res.status(200).json({
             status: 'success',
             message: 'All Solution Masters retrieved successfully',
@@ -59,13 +61,17 @@ class SolutionController {
     // Delete SolutionMaster
     static deleteSolution = catchAsyncError(async (req, res, next) => {
         const { id } = req.params;
+        let { undo } = req.query;
+        undo = undo == "true";
+        const deleteStatus = !undo; 
+
     
-        const solutionMaster = await SolutionModel.findByIdAndDelete(id);
+        const solutionMaster = await SolutionModel.findByIdAndDelete(id, {isDeleted: deleteStatus} , {new : true});
     
         res.status(200).json({
             status: 'success',
             message: 'Solution Master deleted successfully',
-            data: solutionMaster,
+            data: {solution: solutionMaster},
         });
     });
 }

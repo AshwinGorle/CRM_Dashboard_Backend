@@ -16,7 +16,9 @@ class SubSolutionController {
 
     // Get all SolutionMasters
     static getAllSubSolution = catchAsyncError(async (req, res, next) => {
-        const subSolutionMasters = await SubSolutionModel.find();
+        const subSolutionMasters = await SubSolutionModel.find({
+            $or: [{ isDeleted: null }, { isDeleted: false }],
+          });
         res.status(200).json({
             status: 'success',
             message: 'All Solution Masters retrieved successfully',
@@ -58,13 +60,17 @@ class SubSolutionController {
     // Delete SolutionMaster
     static deleteSubSolution = catchAsyncError(async (req, res, next) => {
         const { id } = req.params;
+        let { undo } = req.query;
+        undo = undo == "true";
+        const deleteStatus = !undo; 
+
     
-        const solutionMaster = await SubSolutionModel.findByIdAndDelete(id);
+        const subSolution = await SubSolutionModel.findByIdAndDelete(id, {isDeleted: deleteStatus} , {new : true});
     
         res.status(200).json({
             status: 'success',
             message: ' Sub Solution Master deleted successfully',
-            data: solutionMaster,
+            data: { subSolution },
         });
     });
 }

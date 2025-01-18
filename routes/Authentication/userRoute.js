@@ -39,7 +39,7 @@ userRouter.put(
   UserController.updateUser
 );
 userRouter.delete(
-  "/",
+  "/:id",
   (req, res, next) =>
     checkPermissions(entity, actionTypes.DELETE, req.params.id)(req, res, next),
   UserController.deleteUser

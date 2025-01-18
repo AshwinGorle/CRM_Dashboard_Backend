@@ -7,6 +7,9 @@ const TerritorySchema = new mongoose.Schema({
     },
     description : {
         type : String
+    },isDeleted : {
+        type : Boolean,
+        default : false
     }
 },    {
     timestamps: true

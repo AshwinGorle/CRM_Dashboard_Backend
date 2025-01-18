@@ -16,7 +16,9 @@ class SubIndustryController {
 
     // Get all SubIndustryMasters
     static getAllSubIndustry = catchAsyncError(async (req, res, next) => {
-        const subIndustryMasters = await SubIndustryModel.find();
+        const subIndustryMasters = await SubIndustryModel.find({
+            $or: [{ isDeleted: null }, { isDeleted: false }],
+          });
         res.status(200).json({
             status: 'success',
             message: 'All Sub-Industry Masters retrieved successfully',
@@ -58,13 +60,17 @@ class SubIndustryController {
     // Delete SubIndustryMaster
     static deleteSubIndustry = catchAsyncError(async (req, res, next) => {
         const { id } = req.params;
+        let { undo } = req.query;
+        undo = undo == "true";
+        const deleteStatus = !undo; 
+
     
-        const subIndustryMaster = await SubIndustryModel.findByIdAndDelete(id);
+        const subIndustryMaster = await SubIndustryModel.findByIdAndDelete(id, {isDeleted: deleteStatus} , {new : true});
     
-        res.status(200).json({
+        return res.status(200).send({
             status: 'success',
             message: 'Sub-Industry Master deleted successfully',
-            data: subIndustryMaster,
+            data: {subIndustry : subIndustryMaster},
         });
     });
 }

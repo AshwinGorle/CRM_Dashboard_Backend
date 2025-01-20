@@ -71,7 +71,7 @@ class SalesStageController {
 
         // removing exit date from second last stage
         await StageHistoryModel.findByIdAndUpdate(secondLastHistory._id, {exitDate : null}, {session});
-
+        opportunity.salesStage = newSalesStageId;
         await opportunity.save({session})
         console.log("History Change successful (Backward)");
 
@@ -82,8 +82,9 @@ class SalesStageController {
         const allSalesStages = await SalesStageModel.find({});
         if(!allSalesStages.find(stage=>stage._id.toString() == newSalesStageId)) throw new ClientError ("handleStageChange",errors.stage.INVALID_STAGE)
 
-        const opportunity = await OpportunityMasterModel.findById(opportunityId).populate("stageHistory stageHistory.stage");
+        const opportunity = await OpportunityMasterModel.findById(opportunityId).populate("stageHistory stageHistory.stage").session(session);
         const currentStageId = opportunity.salesStage.toString();
+        console.log("current sales stage of opp:", currentStageId);
         if(currentStageId == newSalesStageId){
             console.log("No Stage Change required ! (new and curr stage is same)")
             return;
@@ -95,6 +96,7 @@ class SalesStageController {
         if(isValidStageChange == 1){
            await this.handleForwardStageChange(newSalesStageId, opportunity, allSalesStages, updateDate, session);
         }else{
+           console.log("handling backward change") 
            await this. handleBackwardStageChange(newSalesStageId, opportunity, allSalesStages,updateDate, session);
         }        
     }

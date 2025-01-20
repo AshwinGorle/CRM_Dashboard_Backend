@@ -264,7 +264,7 @@ class OpportunityController {
         : Date.now();
 
       // if client is changed have to revert the lifeTime value of previous Client
-      if (updateData.client) previousClient = opportunity.client._id;
+      if (updateData.client) previousClient = opportunity?.client?._id;
 
       //updating directly updatable fields
       Object.keys(updateData).forEach((key) => {
@@ -290,7 +290,8 @@ class OpportunityController {
           session
         );
       }
-
+      const opp = await OpportunityMasterModel.findById(opportunity._id).session(session);
+      console.log("opp before change sub stage ", opp);
       // Handle sales subStage change
       if (updateData.salesSubStage) {
         console.log("Entering in sub stage change :");

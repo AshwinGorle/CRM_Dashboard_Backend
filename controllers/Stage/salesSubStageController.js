@@ -18,7 +18,7 @@ class SalesSubStageController {
         // Validate provided subStageId 
         if(!allSalesSubStages.find(subStage=>subStage._id.toString() == newSalesSubStageId)) throw new ClientError ("handleSubStageChange",errors.subStage.INVALID_STAGE);
         const opportunity = await OpportunityMasterModel.findById(opportunityId).populate("stageHistory stageHistory.stage").session(session);
-
+        console.log("opportunity in salesStucStage change", opportunity);
         //if this is the won sub stage then we have to close the opportunity
         
 
@@ -29,7 +29,10 @@ class SalesSubStageController {
         }
 
         // Validating subStage with the Stage
-        const subStage = allSalesSubStages.find((subStage)=>subStage._id == newSalesSubStageId)
+        const subStage = allSalesSubStages.find((subStage)=>subStage?._id?.toString() == newSalesSubStageId)
+        console.log("subStage : ", subStage);
+        console.log("oppSalesStage : ", opportunity.salesStage.toString());
+
         if(subStage.salesStage.toString() != opportunity.salesStage.toString()) throw new ClientError("handleSubStageChange", errors.subStage.MISMATCHED_STAGE);
         
         //Creating new subStageHistory

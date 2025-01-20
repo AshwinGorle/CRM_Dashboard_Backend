@@ -28,6 +28,7 @@ const corsOptions = {
   origin: [
     "https://crm-frontend-sigma-green.vercel.app",
     "http://localhost:3000",
+    "http://localhost:3001",
   ],
   // origin: "*",
   methods: ["POST", "GET", "PUT", "DELETE"],

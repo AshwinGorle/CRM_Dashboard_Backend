@@ -29,6 +29,7 @@ const corsOptions = {
     "https://crm-frontend-sigma-green.vercel.app",
     "http://localhost:3000",
     "http://localhost:3001",
+    "https://rezilance-frontend.vercel.app/login"
   ],
   // origin: "*",
   methods: ["POST", "GET", "PUT", "DELETE"],

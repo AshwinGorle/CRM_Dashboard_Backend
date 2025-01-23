@@ -32,7 +32,7 @@ const checkPermissions = (resource, action, targetEntityId = null) => {
         if (action == actionTypes.GET_ALL) {
           let allowedRoleEntities = role.permissions.filter(
             (perm) =>
-              perm.entity.roleId && perm.allowedActions?.includes(action)
+              perm.entity?.roleId && perm.allowedActions?.includes(action)
           );
 
           if (allowedRoleEntities.length === 0) {
@@ -43,7 +43,7 @@ const checkPermissions = (resource, action, targetEntityId = null) => {
           }
 
           let allowedRoleIds = allowedRoleEntities.map((perm) =>
-            perm.entity.roleId.toString()
+            perm.entity?.roleId.toString()
           );
 
           req.allowedRoleIds = allowedRoleIds;

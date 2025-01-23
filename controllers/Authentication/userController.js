@@ -26,7 +26,12 @@ class UserController {
       });
     }
 
-    let baseQuery = {};
+    let baseQuery = {
+      $and: [
+        { _id: { $ne: req.user._id } },
+        { $or: [{ isDeleted: null }, { isDeleted: false }] },
+      ]
+    };
 
     // Check if user is not super admin
     if (!isSuperAdmin(req.user.role)) {
@@ -40,14 +45,10 @@ class UserController {
       baseQuery.role = { $in: allowedRoleIds };
     }
 
+
     const totalCount = await UserModel.countDocuments(baseQuery);
 
-    const users = await UserModel.find({
-      $and: [
-        { _id: { $ne: req.user._id } },
-        { $or: [{ isDeleted: null }, { isDeleted: false }] },
-      ],
-    })
+    const users = await UserModel.find(baseQuery)
       .populate({
         path: "role",
         match: { name: { $ne: "SUPER ADMIN" } }, // Exclude users with role name "SUPER ADMIN"

@@ -30,7 +30,7 @@ const corsOptions = {
     "http://localhost:3000",
     "http://localhost:3001",
     "https://rezilance-frontend.vercel.app",
-    "audit-note-client.vercel.app"
+    "https://audit-note-client.vercel.app"
   ],
   // origin: "*",
   methods: ["POST", "GET", "PUT", "DELETE"],

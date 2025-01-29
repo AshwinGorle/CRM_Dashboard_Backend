@@ -12,26 +12,23 @@ import {
 } from "./roleEntityController.js";
 import mongoose from "mongoose";
 import UserModel from "../../models/UserModel.js";
+import { fixedRoles } from "../../config/fixedRoles.js";
 
 class RoleController {
   static getAllRole = catchAsyncError(async (req, res, next) => {
     const totalCount = await RoleModel.countDocuments();
 
     // Fetch roles with pagination
-    const roles = await RoleModel.find();
+    const roles = await RoleModel.find({name: {$ne: fixedRoles.SUPER_ADMIN}});
 
-    console.log("req.user.role", req.user.role);
-
-    const filteredRoles = roles?.filter((role) => role.name != "SUPER ADMIN");
-
-    if (!filteredRoles || filteredRoles.length === 0) {
+    if (!roles || roles.length === 0) {
       throw new ServerError("NotFound", "Roles not found");
     }
 
     return res.status(200).json({
       status: "success",
       message: "All roles fetched successfully",
-      data: { totalCount, roles: filteredRoles },
+      data: { totalCount, roles },
     });
   });
 

@@ -3,8 +3,9 @@ import { ServerError } from "../../utils/customErrorHandler.utils.js";
 import uploadAndGetAvatarUrl from "../../utils/uploadAndGetAvatarUrl.utils.js";
 import UserModel from "../../models/UserModel.js";
 import AuthController from "./authController.js";
+import { fixedRoles } from "../../config/fixedRoles.js";
 
-const isSuperAdmin = (role) => role.name === "SUPER ADMIN";
+const isSuperAdmin = (role) => role.name === fixedRoles.SUPER_ADMIN;
 
 class UserController {
   static getAllUser = catchAsyncError(async (req, res, next) => {
@@ -51,7 +52,7 @@ class UserController {
     const users = await UserModel.find(baseQuery)
       .populate({
         path: "role",
-        match: { name: { $ne: "SUPER ADMIN" } }, // Exclude users with role name "SUPER ADMIN"
+        match: { name: { $ne: fixedRoles.SUPER_ADMIN } }, // Exclude users with role name "SUPER ADMIN"
       })
       .select("-password")
       .limit(limit)

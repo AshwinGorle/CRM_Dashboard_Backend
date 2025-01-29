@@ -23,6 +23,7 @@ import roleRouter from "../routes/role/roleRouter.js";
 import systemRouter from "../routes/system/systemRouter.js";
 import targetRouter from "../routes/target/targetRouter.js";
 import leadRouter from "../routes/Lead/leadRouter.js";
+import interactionRouter from "../routes/Interaction/interactionRouter.js";
 // import "../config/to-alter-entities.js";
 
 const app = express();
@@ -70,6 +71,7 @@ app.use("/bd", businessDevelopmentRouter);
 app.use("/tender", tenderMasterRouter);
 app.use("/opportunity", opportunityRouter);
 app.use("/lead", leadRouter);
+app.use("/interaction", interactionRouter);
 app.use("/registration", registrationMasterRouter);
 app.use("/configuration", configurationRoute);
 app.use("/upload", uploadRouter);

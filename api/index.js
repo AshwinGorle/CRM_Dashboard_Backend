@@ -22,6 +22,7 @@ import dashboardRouter from "../routes/dashboard/dashboardRoute.js";
 import roleRouter from "../routes/role/roleRouter.js";
 import systemRouter from "../routes/system/systemRouter.js";
 import targetRouter from "../routes/target/targetRouter.js";
+// import "../config/to-alter-entities.js";
 
 const app = express();
 const corsOptions = {
@@ -29,7 +30,8 @@ const corsOptions = {
     "https://crm-frontend-sigma-green.vercel.app",
     "http://localhost:3000",
     "http://localhost:3001",
-    "https://rezilance-frontend.vercel.app"
+    "https://rezilance-frontend.vercel.app",
+    "https://audit-note-client.vercel.app",
   ],
   // origin: "*",
   methods: ["POST", "GET", "PUT", "DELETE"],

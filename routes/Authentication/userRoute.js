@@ -5,7 +5,7 @@ import checkPermissions from "../../middlewares/checkPermission.js";
 import { actionTypes } from "../../config/actionTypes.js";
 const userRouter = Router();
 
-const entity = "USER";
+const entity = "TEAM";
 userRouter.get(
   "/profile",
   (req, res, next) =>
@@ -44,6 +44,5 @@ userRouter.delete(
     checkPermissions(entity, actionTypes.DELETE, req.params.id)(req, res, next),
   UserController.deleteUser
 );
-
 
 export default userRouter;

@@ -5,7 +5,10 @@ import UserModel from "../../models/UserModel.js";
 import AuthController from "./authController.js";
 import { fixedRoles } from "../../config/fixedRoles.js";
 
-const isSuperAdmin = (role) => role.name === fixedRoles.SUPER_ADMIN;
+// const isSuperAdmin = (role) => role.name === fixedRole.SUPER_ADMIN;
+
+const SUPER_ADMIN_ROLE_ID = process.env.SUPER_ADMIN_ROLE_ID;
+const ADMIN_ROLE_ID = process.env.ADMIN_ROLE_ID;
 
 class UserController {
   static getAllUser = catchAsyncError(async (req, res, next) => {
@@ -13,12 +16,14 @@ class UserController {
     const limit = parseInt(req.query.limit) || 12;
     const skip = (page - 1) * limit;
     const { config } = req.query;
-    console.log("limit", limit);
 
     // Check if config is provided and is true
     if (config === "true") {
       const users = await UserModel.find({
-        $or: [{ isDeleted: null }, { isDeleted: false }],
+        $and: [
+          { role: { $nin: [SUPER_ADMIN_ROLE_ID, ADMIN_ROLE_ID] } },
+          { $or: [{ isDeleted: null }, { isDeleted: false }] },
+        ],
       }).select("firstName lastName");
       return res.status(200).json({
         status: "success",
@@ -31,29 +36,26 @@ class UserController {
       $and: [
         { _id: { $ne: req.user._id } },
         { $or: [{ isDeleted: null }, { isDeleted: false }] },
-      ]
+        { role: { $nin: [SUPER_ADMIN_ROLE_ID] } },
+      ],
     };
 
-    // Check if user is not super admin
-    if (!isSuperAdmin(req.user.role)) {
-      const allowedRoleIds = req.allowedRoleIds;
-      if (!allowedRoleIds || allowedRoleIds.length === 0) {
-        return res.status(403).json({
-          status: "error",
-          message: "You do not have permission to access any users.",
-        });
-      }
-      baseQuery.role = { $in: allowedRoleIds };
-    }
-
+    // Check if user is not super admin >> keep this for future
+    // if (!isSuperAdmin(req.user.role)) {
+    //   const allowedRoleIds = req.allowedRoleIds;
+    //   if (!allowedRoleIds || allowedRoleIds.length === 0) {
+    //     return res.status(403).json({
+    //       status: "error",
+    //       message: "You do not have permission to access any users.",
+    //     });
+    //   }
+    //   baseQuery.role = { $in: allowedRoleIds };
+    // }
 
     const totalCount = await UserModel.countDocuments(baseQuery);
 
     const users = await UserModel.find(baseQuery)
-      .populate({
-        path: "role",
-        match: { name: { $ne: fixedRoles.SUPER_ADMIN } }, // Exclude users with role name "SUPER ADMIN"
-      })
+      .populate({ path: "role" })
       .select("-password")
       .limit(limit)
       .skip(skip)

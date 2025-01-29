@@ -49,6 +49,11 @@ import RoleModel from "../models/RoleModel.js";
 //     actions: ["YES"],
 //   },
 //   {
+//     entity: "TARGET",
+//     label: "SET TARGET",
+//     actions: ["YES"],
+//   },
+//   {
 //     entity: "ROLE",
 //     label: "ROLE",
 //     actions: ["CREATE", "READ", "UPDATE", "DELETE", "GET ALL"],
@@ -103,9 +108,9 @@ import RoleModel from "../models/RoleModel.js";
 // };
 
 // insertEntity({
-//   entity: "LEADERBOARD",
-//   label: "LEADERBOARD",
-//   actions: ["ALL VIEW"],
+//   entity: "TARGET",
+//   label: "SET TARGET",
+//   actions: ["ALLOW"],
 // });
 
 // to get all entities

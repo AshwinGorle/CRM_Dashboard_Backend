@@ -2,6 +2,7 @@ import { ClientError } from "../utils/customErrorHandler.utils.js";
 import RoleModel from "../models/RoleModel.js";
 import UserModel from "../models/UserModel.js";
 import { actionTypes } from "../config/actionTypes.js";
+import { fixedRole } from "../config/fixedRole.js";
 
 const checkPermissions = (resource, action, targetEntityId = null) => {
   return async (req, res, next) => {
@@ -21,7 +22,7 @@ const checkPermissions = (resource, action, targetEntityId = null) => {
         });
       }
 
-      if (role.name === "SUPER ADMIN" || req.query.config === "true") {
+      if (role.name === fixedRole.SUPER_ADMIN || req.query.config === "true") {
         return next();
       }
 

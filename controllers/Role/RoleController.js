@@ -12,14 +12,20 @@ import {
 } from "./roleEntityController.js";
 import mongoose from "mongoose";
 import UserModel from "../../models/UserModel.js";
-import { fixedRoles } from "../../config/fixedRoles.js";
+import { fixedRole } from "../../config/fixedRole.js";
 
 class RoleController {
   static getAllRole = catchAsyncError(async (req, res, next) => {
     const totalCount = await RoleModel.countDocuments();
 
     // Fetch roles with pagination
-    const roles = await RoleModel.find({name: {$ne: fixedRoles.SUPER_ADMIN}});
+    const roles = await RoleModel.find();
+
+    console.log("req.user.role", req.user.role);
+
+    const filteredRoles = roles?.filter(
+      (role) => role.name != fixedRole.SUPER_ADMIN
+    );
 
     if (!roles || roles.length === 0) {
       throw new ServerError("NotFound", "Roles not found");
@@ -33,10 +39,12 @@ class RoleController {
   });
 
   static getAllEntities = catchAsyncError(async (req, res, next) => {
-    const entities = await EntityModel.find();
+    const entities = await EntityModel.find({ roleId: null });
 
     const filteredEntities = entities?.filter(
-      (entity) => entity.entity != "SUPER ADMIN" && entity.entity != "ADMIN"
+      (entity) =>
+        entity.entity != fixedRole.SUPER_ADMIN &&
+        entity.entity != fixedRole.ADMIN
     );
 
     if (!filteredEntities || filteredEntities.length === 0) {
@@ -139,7 +147,7 @@ class RoleController {
 
         // Fetch the role with permissions
         const role = await RoleModel.findById(id).session(session);
-        if (!role || role?.name == "SUPER ADMIN") {
+        if (!role || role?.name == fixedRole.SUPER_ADMIN) {
           throw new ClientError("NotFound", "Role not found.");
         }
 

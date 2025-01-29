@@ -143,8 +143,9 @@ class ClientMasterController {
     const sortingOptions = getSortingOptions(req.query);
     console.log("filter", filterOptions);
     console.log("sorting", sortingOptions);
+    
     if (config === "true") {
-      const clients = await ClientMasterModel.find().select("name");
+      const clients = await ClientMasterModel.find(filterOptions).select("name");
       return res.send({ config: true, clients });
     }
 

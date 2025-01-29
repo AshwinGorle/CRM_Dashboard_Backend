@@ -115,7 +115,7 @@ class ContactMasterController {
     const sortingOptions = getSortingOptions(req.query);
     const { config } = req.query;
     if (config === "true") {
-      const contacts = await ContactMasterModel.find().select(
+      const contacts = await ContactMasterModel.find(filterOptions).select(
         "firstName lastName"
       );
       return res.send({

@@ -5,6 +5,7 @@ import ContactMasterModel from "../../models/ContactMasterModel.js";
 import SolutionModel from "../../models/Configuration/SolutionModel.js";
 import { catchAsyncError } from "../../middlewares/catchAsyncError.middleware.js";
 import { ClientError } from "../../utils/customErrorHandler.utils.js";
+import { getOpportunityIdWithoutClient } from "../../service/opportunityService.js";
 
 class LeadController {
   /**
@@ -64,7 +65,8 @@ class LeadController {
       salesTopLine,
       salesOffset,
     });
-
+    newLead.customId = await getOpportunityIdWithoutClient(client);
+    
     await newLead.save();
     res.status(201).json({
       status: "success",

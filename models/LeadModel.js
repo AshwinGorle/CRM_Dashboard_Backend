@@ -8,6 +8,7 @@ const leadSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "ContactMaster",
     },
+    customId : {type : String, default : null},
     // territory: {
     //   type: mongoose.Schema.Types.ObjectId,
     //   required: true,

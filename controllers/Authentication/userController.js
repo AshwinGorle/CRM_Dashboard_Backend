@@ -4,11 +4,13 @@ import uploadAndGetAvatarUrl from "../../utils/uploadAndGetAvatarUrl.utils.js";
 import UserModel from "../../models/UserModel.js";
 import AuthController from "./authController.js";
 import { fixedRoles } from "../../config/fixedRoles.js";
+import mongoose from "mongoose";
 
 // const isSuperAdmin = (role) => role.name === fixedRole.SUPER_ADMIN;
 
-const SUPER_ADMIN_ROLE_ID = process.env.SUPER_ADMIN_ROLE_ID;
-const ADMIN_ROLE_ID = process.env.ADMIN_ROLE_ID;
+const SUPER_ADMIN_ROLE_ID =
+  "6777c19804d333811d7c6538" || process.env.SUPER_ADMIN_ROLE_ID;
+const ADMIN_ROLE_ID = "67150b16ad87f90fa3ff14a9" || process.env.ADMIN_ROLE_ID;
 
 class UserController {
   static getAllUser = catchAsyncError(async (req, res, next) => {
@@ -25,6 +27,7 @@ class UserController {
           { $or: [{ isDeleted: null }, { isDeleted: false }] },
         ],
       }).select("firstName lastName");
+
       return res.status(200).json({
         status: "success",
         message: "Config users fetched successfully",
@@ -36,7 +39,11 @@ class UserController {
       $and: [
         { _id: { $ne: req.user._id } },
         { $or: [{ isDeleted: null }, { isDeleted: false }] },
-        { role: { $nin: [SUPER_ADMIN_ROLE_ID] } },
+        {
+          role: {
+            $nin: [SUPER_ADMIN_ROLE_ID],
+          },
+        },
       ],
     };
 

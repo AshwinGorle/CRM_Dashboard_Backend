@@ -143,9 +143,11 @@ class ClientMasterController {
     const sortingOptions = getSortingOptions(req.query);
     console.log("filter", filterOptions);
     console.log("sorting", sortingOptions);
-    
+
     if (config === "true") {
-      const clients = await ClientMasterModel.find(filterOptions).select("name");
+      const clients = await ClientMasterModel.find(filterOptions).select(
+        "name"
+      );
       return res.send({ config: true, clients });
     }
 
@@ -164,6 +166,7 @@ class ClientMasterController {
       .populate("secondaryRelationship")
       .populate("relationshipStatus")
       .populate("relatedContacts")
+      .populate("contacts")
       .session(session);
 
     res.status(200).json({
@@ -184,7 +187,7 @@ class ClientMasterController {
       .populate("classification")
       .populate("primaryRelationship")
       .populate("secondaryRelationship")
-      .populate("relationshipStatus")
+      .populate("relationshipStatus");
 
     res.status(200).json({
       status: "success",

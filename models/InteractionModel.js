@@ -1,14 +1,10 @@
 import mongoose from "mongoose";
 
 const interactionSchema = new mongoose.Schema(
-  {
-    opportunity: {
+  { 
+    lead: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "OpportunityMaster",
-    },
-    client: { type: mongoose.Schema.Types.ObjectId, ref: "ClientMaster" },
-    description: {
-      type: String,
+      ref: "Lead",
     },
     interactions : [
         {

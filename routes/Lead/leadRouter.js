@@ -8,31 +8,31 @@ const entity = "LEAD";
 
 leadRouter.get(
   "/:id",
-  checkPermissions(entity, actionTypes.READ),
+  // checkPermissions(entity, actionTypes.READ),
   LeadController.getLead
 );
 
 leadRouter.get(
   "/",
-  checkPermissions(entity, actionTypes.GET_ALL),
+  // checkPermissions(entity, actionTypes.GET_ALL),
   LeadController.getAllLeads
 );
 
 leadRouter.post(
   "/",
-  checkPermissions(entity, actionTypes.CREATE),
+  // checkPermissions(entity, actionTypes.CREATE),
   LeadController.createLead
 );
 
 leadRouter.put(
   "/:id",
-  checkPermissions(entity, actionTypes.UPDATE),
+  // checkPermissions(entity, actionTypes.UPDATE),
   LeadController.updateLead
 );
 
 leadRouter.delete(
   "/:id",
-  checkPermissions(entity, actionTypes.DELETE),
+  // checkPermissions(entity, actionTypes.DELETE),
   LeadController.deleteLead
 );
 

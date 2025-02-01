@@ -10,12 +10,13 @@ import {
   getFilterOptions,
   getSortingOptions,
 } from "../../utils/searchOptions.js";
+import InteractionController from "../Interaction/InteractionController.js";
 
 class LeadController {
   /**
    * Create Lead
    */
-  static createLead = catchAsyncError(async (req, res) => {
+  static createLead = catchAsyncError(async (req, res, next, session) => {
     const {
       projectName,
       client,
@@ -57,10 +58,11 @@ class LeadController {
         }
       }
     }
-
+    const customId = await getOpportunityIdWithoutClient(client);
     // Create new lead
     const newLead = new LeadModel({
       projectName,
+      customId,
       client: clientId,
       contact: contactId,
       solution: solutionId,
@@ -69,15 +71,25 @@ class LeadController {
       salesTopLine,
       salesOffset,
     });
-    newLead.customId = await getOpportunityIdWithoutClient(client);
 
-    await newLead.save();
+    await newLead.save({ session });
+
+    // creating interaction for the lead
+    const interaction = await InteractionController.createInteraction({
+      leadId: newLead._id,
+      session,
+    });
+
+    // updating interaction into lead
+    newLead.interaction = interaction._id;
+    await newLead.save({ session });
+
     res.status(201).json({
       status: "success",
       message: "Lead created successfully.",
       data: newLead,
     });
-  });
+  }, true);
 
   /**
    * Update Lead
@@ -199,6 +211,13 @@ class LeadController {
         .populate("client", "name")
         .populate("contact", "firstName lastName email phone")
         .populate("solution", "name")
+        .populate({
+          path: "interaction", 
+          populate: {
+            path: "interactions.contact", 
+            select: "firstName lastName email phone",
+          },
+        })
         .sort(sortingOptions);
 
       return res.send({

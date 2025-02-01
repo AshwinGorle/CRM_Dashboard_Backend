@@ -29,7 +29,7 @@ class LeadController {
     } = req.body;
 
     // Required field validation
-    if (!projectName || !client ) {
+    if (!projectName || !client) {
       throw new ClientError("All fields are required.");
     }
 
@@ -212,9 +212,9 @@ class LeadController {
         .populate("contact", "firstName lastName email phone")
         .populate("solution", "label")
         .populate({
-          path: "interaction", 
+          path: "interaction",
           populate: {
-            path: "interactions.contact", 
+            path: "interactions.contact",
             select: "firstName lastName email phone",
           },
         })

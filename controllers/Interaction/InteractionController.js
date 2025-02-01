@@ -32,11 +32,9 @@ class InteractionController {
   /**
    * Update Interaction
    */
-  static updateInteraction = catchAsyncError(async (req, res) => {
+  static updateInteraction = catchAsyncError(async (req, res, next , session) => {
     const { id } = req.params;
     const {
-      lead,
-      client,
       description,
       interactions,
       potentialTopLine,
@@ -44,33 +42,9 @@ class InteractionController {
       potentialRevenue,
     } = req.body;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      throw new ClientError("Invalid Interaction ID.");
-    }
-
     const interaction = await InteractionModel.findById(id);
     if (!interaction) {
       throw new ClientError("Interaction not found.");
-    }
-
-    // Convert string IDs to ObjectId
-    const toObjectId = (id) =>
-      mongoose.Types.ObjectId.isValid(id)
-        ? new mongoose.Types.ObjectId(id)
-        : null;
-
-    const leadId = lead ? toObjectId(lead) : interaction.lead;
-    const clientId = client ? toObjectId(client) : interaction.client;
-
-    // Validate existence of Opportunity & Client if updated
-    if (leadId && leadId.toString() !== interaction.lead.toString()) {
-      const opportunityExists = await LeadModal.findById(leadId);
-      if (!opportunityExists) throw new ClientError("Opportunity not found.");
-    }
-
-    if (clientId && clientId.toString() !== interaction.client.toString()) {
-      const clientExists = await ClientMasterModel.findById(clientId);
-      if (!clientExists) throw new ClientError("Client not found.");
     }
 
     // Validate and replace interactions
@@ -83,28 +57,22 @@ class InteractionController {
             "Each interaction must have a contact and conversation."
           );
         }
-
         const contactId = toObjectId(interaction.contact);
         if (!contactId) throw new ClientError("Invalid Contact ID.");
-
-        const contactExists = await ContactMasterModel.findById(contactId);
-        if (!contactExists) throw new ClientError("Contact not found.");
-
         validatedInteractions.push({
           contact: contactId,
           conversation: interaction.conversation,
+          date : interaction.data || null
         });
       }
     }
 
     // Update interaction document
-    interaction.lead = leadId;
-    interaction.client = clientId;
-    interaction.description = description;
-    interaction.interactions = validatedInteractions;
-    interaction.potentialTopLine = potentialTopLine;
-    interaction.potentialOffset = potentialOffset;
-    interaction.potentialRevenue = potentialRevenue;
+    if(description) interaction.description = description
+    if(interactions) interaction.interactions = validatedInteractions
+    if(potentialTopLine) interaction.potentialTopLine = potentialTopLine 
+    if(potentialOffset) interaction.potentialOffset = potentialOffset 
+    if(potentialRevenue) interaction.potentialRevenue = potentialRevenue 
 
     await interaction.save();
 
@@ -113,7 +81,7 @@ class InteractionController {
       message: "Interaction updated successfully.",
       data: interaction,
     });
-  });
+  }, true);
 
   /**
    * Get Single Interaction by ID
@@ -126,7 +94,7 @@ class InteractionController {
     }
 
     const interaction = await InteractionModel.findById(id)
-      .populate("lead", "projectName") // Populate lead details
+      .populate("lead") // Populate lead details
       .populate("client", "name") // Populate client details
       .populate(
         "interactions.contact",

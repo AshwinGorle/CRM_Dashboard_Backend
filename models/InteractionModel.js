@@ -1,16 +1,20 @@
 import mongoose from "mongoose";
 
 const interactionSchema = new mongoose.Schema(
-  { 
+  {
     lead: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Lead",
     },
-    interactions : [
-        {
-            contact :  { type: mongoose.Schema.Types.ObjectId, ref: "ContactMaster" },
-            conversation : {type : String}
-        }
+    interactions: [
+      {
+        contact: { type: mongoose.Schema.Types.ObjectId, ref: "ContactMaster" },
+        conversation: { type: String },
+        date: {
+          type: Date,
+          default: Date.now(),
+        },
+      },
     ],
     potentialTopLine: {
       type: Number,
@@ -20,6 +24,9 @@ const interactionSchema = new mongoose.Schema(
     },
     potentialRevenue: {
       type: Number,
+    },
+    description: {
+      type: String,
     },
   },
   { timestamps: true }

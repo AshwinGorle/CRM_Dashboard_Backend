@@ -29,7 +29,7 @@ class LeadController {
     } = req.body;
 
     // Required field validation
-    if (!projectName || !client || !description) {
+    if (!projectName || !client ) {
       throw new ClientError("All fields are required.");
     }
 
@@ -210,7 +210,7 @@ class LeadController {
       const leads = await LeadModel.find(filterOptions)
         .populate("client", "name")
         .populate("contact", "firstName lastName email phone")
-        .populate("solution", "name")
+        .populate("solution", "label")
         .populate({
           path: "interaction", 
           populate: {

@@ -6,6 +6,10 @@ import SolutionModel from "../../models/Configuration/SolutionModel.js";
 import { catchAsyncError } from "../../middlewares/catchAsyncError.middleware.js";
 import { ClientError } from "../../utils/customErrorHandler.utils.js";
 import { getOpportunityIdWithoutClient } from "../../service/opportunityService.js";
+import {
+  getFilterOptions,
+  getSortingOptions,
+} from "../../utils/searchOptions.js";
 
 class LeadController {
   /**
@@ -66,7 +70,7 @@ class LeadController {
       salesOffset,
     });
     newLead.customId = await getOpportunityIdWithoutClient(client);
-    
+
     await newLead.save();
     res.status(201).json({
       status: "success",
@@ -182,20 +186,42 @@ class LeadController {
     });
   });
 
-  /**
-   * Get All Leads
-   */
-  static getAllLeads = catchAsyncError(async (req, res) => {
+  static getAllLeads = catchAsyncError(async (req, res, next) => {
+    const limit = parseInt(req.query.limit) || 12;
+    const page = parseInt(req.query.page) || 1;
+    const skip = (page - 1) * limit;
+    const filterOptions = getFilterOptions(req.query);
+    const sortingOptions = getSortingOptions(req.query);
+    const { config } = req.query;
+
+    if (config === "true") {
+      const leads = await LeadModel.find(filterOptions)
+        .populate("client", "name")
+        .populate("contact", "firstName lastName email phone")
+        .populate("solution", "name")
+        .sort(sortingOptions);
+
+      return res.send({
+        status: "success",
+        message: "Config leads fetched successfully",
+        data: { config: true, leads },
+      });
+    }
+
+    const totalCount = await LeadModel.countDocuments(filterOptions);
     const leads = await LeadModel.find()
+      .sort(sortingOptions)
+      .limit(limit)
+      .skip(skip)
       .populate("client", "name") // Populate client field with name
-      .populate("contact", "name email phone") // Populate contact details
+      .populate("contact", "firstName lastName email phone") // Populate contact details
       .populate("solution", "name") // Populate solution field
       .sort({ createdAt: -1 });
 
-    res.status(200).json({
+    return res.send({
       status: "success",
-      message: "Leads fetched successfully.",
-      data: leads,
+      message: "All leads retrieved successfully",
+      data: { page, limit, totalCount, leads: leads },
     });
   });
 

@@ -8,6 +8,7 @@ import { getFilterOptions, getSortingOptions } from "../../utils/searchOptions.j
 import BusinessDevelopmentModel from "../../models/BusinessDevelopmentModel.js";
 import ClientMasterModel from "../../models/ClientMasterModel.js";
 import RegistrationMasterModel from "../../models/RegistrationMasterModel.js";
+import { handleClientChange } from "../../service/contactService.js";
 
 class ContactMasterController {
   static createContact = catchAsyncError(async (req, res, next) => {
@@ -160,22 +161,26 @@ class ContactMasterController {
     });
   });
 
-  static updateContact = catchAsyncError(async (req, res, next) => {
+  static updateContact = catchAsyncError(async (req, res, next, session) => {
     console.log("update interred");
     const { id } = req.params;
     const updateData = req.body;
-    const contact = await ContactMasterModel.findById(id);
     console.log("update data for contact ", updateData);
-    if (!contact) throw new ServerError("NotFound", "Contact");
 
+    const contact = await ContactMasterModel.findById(id);
+    if (!contact) throw new ServerError("NotFound", "Contact");
+    
+    //Updating directly updatable fields
     Object.keys(updateData).forEach((key) => {
       if (key == "city" || key == "state") {
         contact["address"][key] = updateData[key];
       } else {
-        contact[key] = updateData[key];
+        if(key != 'client')
+         contact[key] = updateData[key];
       }
     });
-
+    
+    //Handling profile change
     if (req.file) {
       contact.avatar = await uploadAndGetAvatarUrl(
         req.file,
@@ -185,21 +190,26 @@ class ContactMasterController {
       );
     }
     console.log("contact before save ", contact);
-    await contact.save();
+
+    //Handling client change
+    if(updateData.client) await handleClientChange({clientId : updateData.client, contactId : id, session })
+
+    await contact.save({session});
 
     const populatedContact = await ContactMasterModel.findById(contact._id)
       .populate("enteredBy")
       .populate("client")
       .populate("archeType")
       .populate("relationshipDegree")
-      .populate("territory");
+      .populate("territory")
+      .session(session)
 
     res.status(200).json({
       status: "success",
       message: "Contact updated successfully",
       data: populatedContact,
     });
-  });
+  }, true);
 
   static deleteContact = catchAsyncError(async (req, res, next, session) => {
     const { id } = req.params;

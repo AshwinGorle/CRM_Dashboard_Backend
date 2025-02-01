@@ -48,11 +48,18 @@ export const getOpportunityId = (clientName, clientTerritory)=>{
 
 // handle addition and deletion contact from client when we receive an array of contact ids 
 export const parseContacts = async (relatedContacts, client)=>{
+    const prevRelatedContacts = client.relatedContacts || [];
+
     if(!relatedContacts) return // if
     console.log("related contacts in parseContacts----", relatedContacts)
     if(Array.isArray(relatedContacts) && relatedContacts.length > 0){
+
         for (const contactId of relatedContacts){
-            const contact = await ContactMasterModel.findById(contactId);
+           
+            if(!prevRelatedContacts.includes(contactId)){
+              // we have to delete this contact
+            }
+
             if(!contact) throw new ServerError("NotFound","contact")
             if(contact && client.relatedContacts.filter((contact)=>contact.toString() == contactId.toString()).length === 0){
                 contact.client = client._id
@@ -61,6 +68,7 @@ export const parseContacts = async (relatedContacts, client)=>{
             }
 
         }
+
     }
 }
 

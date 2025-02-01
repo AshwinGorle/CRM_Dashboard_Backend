@@ -32,56 +32,71 @@ class InteractionController {
   /**
    * Update Interaction
    */
-  static updateInteraction = catchAsyncError(async (req, res, next , session) => {
-    const { id } = req.params;
-    const {
-      description,
-      interactions,
-      potentialTopLine,
-      potentialOffset,
-      potentialRevenue,
-    } = req.body;
+  static updateInteraction = catchAsyncError(
+    async (req, res, next, session) => {
+      const { id } = req.params;
+      const {
+        description,
+        interactions,
+        potentialTopLine,
+        potentialOffset,
+        potentialRevenue,
+      } = req.body;
 
-    const interaction = await InteractionModel.findById(id);
-    if (!interaction) {
-      throw new ClientError("Interaction not found.");
-    }
-
-    // Validate and replace interactions
-    let validatedInteractions = interaction.interactions;
-    if (Array.isArray(interactions)) {
-      validatedInteractions = [];
-      for (const interaction of interactions) {
-        if (!interaction.contact || !interaction.conversation) {
-          throw new ClientError(
-            "Each interaction must have a contact and conversation."
-          );
-        }
-        const contactId = toObjectId(interaction.contact);
-        if (!contactId) throw new ClientError("Invalid Contact ID.");
-        validatedInteractions.push({
-          contact: contactId,
-          conversation: interaction.conversation,
-          date : interaction.data || null
-        });
+      const interaction = await InteractionModel.findById(id);
+      if (!interaction) {
+        throw new ClientError("Interaction not found.");
       }
-    }
 
-    // Update interaction document
-    if(description) interaction.description = description
-    if(interactions) interaction.interactions = validatedInteractions
-    if(potentialTopLine) interaction.potentialTopLine = potentialTopLine 
-    if(potentialOffset) interaction.potentialOffset = potentialOffset 
-    if(potentialRevenue) interaction.potentialRevenue = potentialRevenue 
+      // Validate and replace interactions
+      let validatedInteractions = interaction.interactions;
+      if (Array.isArray(interactions)) {
+        validatedInteractions = [];
+        for (const interaction of interactions) {
+          if (!interaction.contact || !interaction.conversation) {
+            throw new ClientError(
+              "Each interaction must have a contact and conversation."
+            );
+          }
+          const contactId = toObjectId(interaction.contact);
+          if (!contactId) throw new ClientError("Invalid Contact ID.");
+          validatedInteractions.push({
+            contact: contactId,
+            conversation: interaction.conversation,
+            date: interaction.data || null,
+          });
+        }
+      }
 
-    await interaction.save();
+      // Update interaction document
+      if (description) interaction.description = description;
+      if (interactions) interaction.interactions = validatedInteractions;
+      if (potentialTopLine) interaction.potentialTopLine = potentialTopLine;
+      if (potentialOffset) interaction.potentialOffset = potentialOffset;
+      if (potentialRevenue) interaction.potentialRevenue = potentialRevenue;
 
-    res.status(200).json({
-      status: "success",
-      message: "Interaction updated successfully.",
-      data: interaction,
-    });
-  }, true);
+      await interaction.save({ session });
+
+      const populatedInteraction = await InteractionModel.findById(
+        interaction._id
+      )
+        .populate("lead") // Populate lead details
+        .populate("client", "name") // Populate client details
+        .populate(
+          "interactions.contact",
+          "firstName lastName avatar  email phone",
+          session
+        )
+        .session(session);
+
+      res.status(200).json({
+        status: "success",
+        message: "Interaction updated successfully.",
+        data: populatedInteraction,
+      });
+    },
+    true
+  );
 
   /**
    * Get Single Interaction by ID
@@ -112,9 +127,6 @@ class InteractionController {
     });
   });
 
-  /**
-   * Get All Interactions
-   */
   static getAllInteractions = catchAsyncError(async (req, res) => {
     const limit = parseInt(req.query.limit) || 12;
     const page = parseInt(req.query.page) || 1;

@@ -24,6 +24,7 @@ import TenderMasterModel from "../../models/TenderMasterModel.js";
 import StageHistoryModel from "../../models/HistoryModels/StageHistoryModel.js";
 import SubStageHistoryModel from "../../models/HistoryModels/SubSageHistoryModel.js";
 import RevenueMasterModel from "../../models/RevenueMasterModel.js";
+import LeadModel from "../../models/LeadModel.js";
 class OpportunityController {
   // we have commented associated tender in create and update opportunity
   static createOpportunity = catchAsyncError(
@@ -46,6 +47,7 @@ class OpportunityController {
         revenue,
         expectedWonDate,
         confidenceLevel,
+        customId,
       } = req.body;
       // Validate required fields
       console.log("revenue from frontend :  ", revenue);
@@ -83,8 +85,17 @@ class OpportunityController {
         expectedWonDate,
       });
 
-      //generating customId for Opp.
-      newOpportunity.customId = await getOpportunityIdWithoutClient(client);
+      if (customId) {
+        //Presence of custom id , indicates this is an lead which is being converted into opp.
+        newOpportunity.customId = customId;
+        await LeadModel.updateMany(
+          { customId: customId },
+          { $set: { converted: true } }
+        );
+      } else {
+        //Generating customId for Opp.
+        newOpportunity.customId = await getOpportunityIdWithoutClient(client);
+      }
 
       //Parse the revenues into opportunity revenue field formate
       if (revenue)
@@ -290,7 +301,9 @@ class OpportunityController {
           session
         );
       }
-      const opp = await OpportunityMasterModel.findById(opportunity._id).session(session);
+      const opp = await OpportunityMasterModel.findById(
+        opportunity._id
+      ).session(session);
       console.log("opp before change sub stage ", opp);
       // Handle sales subStage change
       if (updateData.salesSubStage) {
@@ -388,7 +401,7 @@ class OpportunityController {
         session
       );
       if (!opportunity) {
-         throw  new ClientError("NotFound","Opportunity not found");
+        throw new ClientError("NotFound", "Opportunity not found");
       }
 
       // Step 2: Fetch the associated tender using the `associatedTender` field

@@ -28,6 +28,10 @@ const leadSchema = new mongoose.Schema(
     },
     salesOffset : {
         type : Number,
+    },
+    converted : {
+      type : Boolean,
+      default : false
     }
   },
   { timestamps: true }

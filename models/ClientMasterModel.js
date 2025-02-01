@@ -80,7 +80,8 @@ export const ClientMasterSchema = new mongoose.Schema({
     relatedContacts : [
         {
             type : mongoose.Schema.Types.ObjectId,
-            ref : "ContactMaster"
+            ref : "ContactMaster",
+            default : []
         }
     ],
     relationshipStatus : {

@@ -8,7 +8,10 @@ import {
   getFilterOptions,
   getSortingOptions,
 } from "../../utils/searchOptions.js";
-import { parseContacts } from "../../service/clientService.js";
+import {
+  handleContactsUpdate,
+  parseContacts,
+} from "../../service/clientService.js";
 import { handleUpdateOpportunityId } from "../../service/opportunityService.js";
 import { handleUpdateTenderId } from "../../service/tenderService.js";
 import TerritoryModel from "../../models/Configuration/TerritoryModel.js";
@@ -210,8 +213,13 @@ class ClientMasterController {
     });
 
     // Parsing Related contacts
-    if (updateData.relatedContacts)
-      await parseContacts(updateData.relatedContacts, client);
+    if (updateData.hasOwnProperty("relatedContacts") )
+      await handleContactsUpdate({
+        newContacts: updateData.relatedContacts,
+        oldContacts: client.relatedContacts,
+        clientId : client._id,
+        session,
+      });
 
     // Handle Client Avatar change
     if (req.file) {
@@ -260,67 +268,6 @@ class ClientMasterController {
       data: populatedClient,
     });
   }, true);
-
-  // static deleteClient = catchAsyncError(async (req, res, next, session) => {
-  //     const { id } = req.params;
-  //     let { confirm } = req.query;
-  //     confirm = confirm == "true" ? true : false;
-  //     const client = await ClientMasterModel.findById(id);
-  //     //note every operation should be done in session which we are receiving in param
-
-  //     // part 1 (if confirmation is false) where we will just fetch all the related documents which will be deleted if the client is deleted, we will not delete
-  //     // just return all this to frontend and will actually delete in part 2 (if confirmation is true)
-
-  //     // step 1: fetch all the opportunities related to the client while populating the associatedTender field of opportunity
-
-  //     // step 2: fetch all the registrations which has this client in the client field of it
-
-  //     // step 3: fetch all the business developments which has this client in the client field of it
-
-  //     // step 4: now we have to return this to frontend in response so that i can show what things will be deleted on deleting the client
-  //     // send res in this format
-  //     // return res.status(200).json({
-  //     //     status: "success",
-  //     //     message: "Items that would be deleted (no actual deletion performed)",
-  //     //     data: {
-  //     //       client,
-  //     //       opportunities,
-  //     //       registrations,
-  //     //       businessDevelopments,
-  //     //     },
-  //     //   });
-
-  //     // part 2 actual deletion of documents if confirm is true
-
-  //     // step 1 : in each opportunity there is field stageHistory which is an array of stageHistory document reference we have to delete all this
-
-  //     // step 2 : in each stageHistory there is field subStageHistory which  is array of reference ids of subStageHistory document we have to delete all this
-
-  //     // step 3 : in each opportunity there is field revenue which is array of reference ids of revenue document so we have to delete all this also
-
-  //     // step 4 : now in all or some opportunities there may be tender now we have to delete all these tenders too
-
-  //     // step 5 : now finally we can delete the opportunities
-
-  //     // step 6 : now delete the fetched registrations
-
-  //     // step 7 : now delete the fetched businessDevelopments
-
-  //     // step 8 : now finally we can delete the client
-
-  //     // in response we have to send all the deleted items in response
-  //     // res.status(200).json({
-  //     //     status: 'success',
-  //     //     message: 'Client deleted successfully',
-  //     //     data: {
-  //     //         client,
-  //     //         tenders,
-  //     //         opportunities,
-  //     //         registrations,
-  //     //         businessDevelopments
-  //     //     }
-  //     // });
-  // },true);
 
   static deleteClient = catchAsyncError(async (req, res, next, session) => {
     console.log("delete client called");

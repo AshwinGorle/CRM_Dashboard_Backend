@@ -87,6 +87,8 @@ class OpportunityController {
 
       if (customId) {
         //Presence of custom id , indicates this is an lead which is being converted into opp.
+        const opportunity = await OpportunityMasterModel.findOne({customId : customId});
+        if(opportunity) throw new ClientError("Already converted to Deal!");
         newOpportunity.customId = customId;
         await LeadModel.updateMany(
           { customId: customId },

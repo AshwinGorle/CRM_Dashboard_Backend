@@ -62,6 +62,7 @@ class LeadController {
     // Create new lead
     const newLead = new LeadModel({
       projectName,
+      enteredBy : req?.user?._id,
       customId,
       client: clientId,
       contact: contactId,

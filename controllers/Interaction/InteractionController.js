@@ -1,18 +1,10 @@
 import mongoose from "mongoose";
 import InteractionModel from "../../models/InteractionModel.js";
-
-import ClientMasterModel from "../../models/ClientMasterModel.js";
-import ContactMasterModel from "../../models/ContactMasterModel.js";
 import { catchAsyncError } from "../../middlewares/catchAsyncError.middleware.js";
 import {
   ClientError,
-  ServerError,
 } from "../../utils/customErrorHandler.utils.js";
-import LeadModel from "../../models/LeadModel.js";
-import {
-  getFilterOptions,
-  getSortingOptions,
-} from "../../utils/searchOptions.js";
+
 
 class InteractionController {
   static createInteraction = async ({ leadId, session }) => {

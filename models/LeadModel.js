@@ -2,13 +2,18 @@ import mongoose from "mongoose";
 
 const leadSchema = new mongoose.Schema(
   {
+    enteredBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      // required: true,
+      ref: "User",
+    },
     projectName: { type: String, default: "", require: true },
     client: { type: mongoose.Schema.Types.ObjectId, ref: "ClientMaster" },
     contact: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "ContactMaster",
     },
-    customId : {type : String, default : null},
+    customId: { type: String, default: null },
     interaction: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Interaction",
@@ -17,22 +22,22 @@ const leadSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Solution",
     },
-    description : {
-        type : String
+    description: {
+      type: String,
     },
-    source : {
-        type : String
+    source: {
+      type: String,
     },
-    salesTopLine : {
-        type : Number,
+    salesTopLine: {
+      type: Number,
     },
-    salesOffset : {
-        type : Number,
+    salesOffset: {
+      type: Number,
     },
-    converted : {
-      type : Boolean,
-      default : false
-    }
+    converted: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

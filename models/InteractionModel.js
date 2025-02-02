@@ -16,18 +16,18 @@ const interactionSchema = new mongoose.Schema(
         },
       },
     ],
-    // potentialTopLine: {
-    //   type: Number,
-    // },
-    // potentialOffset: {
-    //   type: Number,
-    // },
-    // potentialRevenue: {
-    //   type: Number,
-    // },
-    // description: {
-    //   type: String,
-    // },
+    potentialTopLine: {
+      type: Number,
+    },
+    potentialOffset: {
+      type: Number,
+    },
+    potentialRevenue: {
+      type: Number,
+    },
+    description: {
+      type: String,
+    },
   },
   { timestamps: true }
 );

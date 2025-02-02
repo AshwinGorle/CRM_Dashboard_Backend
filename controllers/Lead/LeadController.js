@@ -213,10 +213,10 @@ class LeadController {
         .populate("solution", "label")
         .populate({
           path: "interaction",
-          populate: {
-            path: "interactions.contact",
-            select: "firstName lastName email phone",
-          },
+          // populate: {
+          //   path: "interactions.contact",
+          //   select: "firstName lastName email phone",
+          // },
         })
         .sort(sortingOptions);
 

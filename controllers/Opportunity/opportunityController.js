@@ -49,6 +49,9 @@ class OpportunityController {
         confidenceLevel,
         customId,
       } = req.body;
+
+      console.log("customId in req : ", customId);
+
       // Validate required fields
       console.log("revenue from frontend :  ", revenue);
       if (!projectName || !stageClarification)
@@ -88,7 +91,8 @@ class OpportunityController {
       if (customId) {
         //Presence of custom id , indicates this is an lead which is being converted into opp.
         const opportunity = await OpportunityMasterModel.findOne({customId : customId});
-        if(opportunity) throw new ClientError("Already converted to Deal!");
+        if(opportunity) throw new ClientError("Invalid Inputs","Already converted to Deal!");
+
         newOpportunity.customId = customId;
         await LeadModel.updateMany(
           { customId: customId },

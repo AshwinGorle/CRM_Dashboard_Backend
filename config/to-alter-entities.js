@@ -113,6 +113,21 @@ import RoleModel from "../models/RoleModel.js";
 //   actions: ["ALLOW"],
 // });
 
+// to update entities
+// const updateEntity = async (entity) => {
+//   try {
+//     const updated = await EntityModel.findOneAndUpdate(
+//       { entity },
+//       { actions: ["CREATE"] }
+//     );
+//     console.log(updated, "entity updated successfully");
+//   } catch (err) {
+//     console.error("Error inserting predefined entity:", err);
+//   }
+// };
+
+// updateEntity("INTERACTION");
+
 // to get all entities
 // const getAllEntities = async () => {
 //   try {

@@ -6,27 +6,27 @@ import checkPermissions from "../../middlewares/checkPermission.js";
 const interactionRouter = Router();
 const entity = "INTERACTION";
 
-interactionRouter.get(
-  "/:id",
-  checkPermissions(entity, actionTypes.READ),
-  InteractionController.getInteraction
-);
+// interactionRouter.get(
+//   "/:id",
+//   checkPermissions(entity, actionTypes.READ),
+//   InteractionController.getInteraction
+// );
 
-interactionRouter.get(
-  "/",
-  checkPermissions(entity, actionTypes.GET_ALL),
-  InteractionController.getAllInteractions
-);
+// interactionRouter.get(
+//   "/",
+//   checkPermissions(entity, actionTypes.GET_ALL),
+//   InteractionController.getAllInteractions
+// );
 
-interactionRouter.post(
-  "/",
-  checkPermissions(entity, actionTypes.CREATE),
-  InteractionController.createInteraction
-);
+// interactionRouter.post(
+//   "/",
+//   checkPermissions(entity, actionTypes.CREATE),
+//   InteractionController.createInteraction
+// );
 
 interactionRouter.put(
   "/:id",
-  checkPermissions(entity, actionTypes.UPDATE),
+  checkPermissions(entity, actionTypes.CREATE),
   InteractionController.updateInteraction
 );
 

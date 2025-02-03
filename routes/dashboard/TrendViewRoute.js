@@ -4,18 +4,11 @@ import checkPermissions from "../../middlewares/checkPermission.js";
 import { actionTypes } from "../../config/actionTypes.js";
 const trendViewRouter = Router();
 
-
-
-// const entity = "TREND VIEW";
-// trendViewRouter.post(
-//   "/",
-//   checkPermissions(entity, actionTypes.ALL_VIEW),
-//   TrendViewController.getTrendView
-// );
-
-
+const entity = "TREND VIEW";
 trendViewRouter.post(
-  "/", TrendViewController.getTrendView
+  "/",
+  checkPermissions(entity, actionTypes.ALL_VIEW),
+  TrendViewController.getTrendView
 );
 
 export default trendViewRouter;

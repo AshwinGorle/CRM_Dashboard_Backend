@@ -24,7 +24,6 @@ import systemRouter from "../routes/system/systemRouter.js";
 import targetRouter from "../routes/target/targetRouter.js";
 import leadRouter from "../routes/Lead/leadRouter.js";
 import interactionRouter from "../routes/Interaction/interactionRouter.js";
-// import "../config/to-alter-entities.js";
 
 const app = express();
 const corsOptions = {

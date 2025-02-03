@@ -28,10 +28,13 @@ const leadSchema = new mongoose.Schema(
     source: {
       type: String,
     },
-    salesTopLine: {
+    potentialTopLine: {
       type: Number,
     },
-    salesOffset: {
+    potentialOffset: {
+      type: Number,
+    },
+    potentialRevenue: {
       type: Number,
     },
     converted: {

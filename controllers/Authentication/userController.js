@@ -3,8 +3,6 @@ import { ServerError } from "../../utils/customErrorHandler.utils.js";
 import uploadAndGetAvatarUrl from "../../utils/uploadAndGetAvatarUrl.utils.js";
 import UserModel from "../../models/UserModel.js";
 import AuthController from "./authController.js";
-import { fixedRoles } from "../../config/fixedRoles.js";
-import mongoose from "mongoose";
 
 // const isSuperAdmin = (role) => role.name === fixedRole.SUPER_ADMIN;
 

@@ -26,7 +26,7 @@ const entity = "INTERACTION";
 
 interactionRouter.put(
   "/:id",
-  checkPermissions(entity, actionTypes.CREATE),
+  checkPermissions(entity, actionTypes.CREATE), // CREATE action type will be here it's not a mistake
   InteractionController.updateInteraction
 );
 

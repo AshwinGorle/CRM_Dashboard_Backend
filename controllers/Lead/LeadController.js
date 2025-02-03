@@ -24,8 +24,8 @@ class LeadController {
       solution,
       description,
       source,
-      salesTopLine,
-      salesOffset,
+      potentialTopLine,
+      potentialOffset,
     } = req.body;
 
     // Required field validation
@@ -62,15 +62,16 @@ class LeadController {
     // Create new lead
     const newLead = new LeadModel({
       projectName,
-      enteredBy : req?.user?._id,
+      enteredBy: req?.user?._id,
       customId,
       client: clientId,
       contact: contactId,
       solution: solutionId,
       description,
       source,
-      salesTopLine,
-      salesOffset,
+      potentialTopLine,
+      potentialOffset,
+      potentialRevenue: Number(potentialTopLine) - Number(potentialOffset),
     });
 
     await newLead.save({ session });
@@ -104,8 +105,8 @@ class LeadController {
       solution,
       description,
       source,
-      salesTopLine,
-      salesOffset,
+      potentialTopLine,
+      potentialOffset,
     } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -153,8 +154,8 @@ class LeadController {
         solution: solutionId,
         description,
         source,
-        salesTopLine,
-        salesOffset,
+        potentialTopLine,
+        potentialOffset,
       },
       { new: true, runValidators: true }
     );

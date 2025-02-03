@@ -145,7 +145,7 @@ class ClientMasterConfigController {
 
   static createRelationshipStatus = catchAsyncError(async (req, res, next) => {
     const { label } = req.body;
-
+    console.log("label : ", label)
     const newRelationshipStatus = await RelationshipStatusModel.create({ label });
 
     res.status(201).json({

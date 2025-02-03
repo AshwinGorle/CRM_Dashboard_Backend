@@ -8,9 +8,12 @@ import mongoose from "mongoose";
 
 // const isSuperAdmin = (role) => role.name === fixedRole.SUPER_ADMIN;
 
-const SUPER_ADMIN_ROLE_ID =
-  "6777c19804d333811d7c6538" || process.env.SUPER_ADMIN_ROLE_ID;
-const ADMIN_ROLE_ID = "67150b16ad87f90fa3ff14a9" || process.env.ADMIN_ROLE_ID;
+// const SUPER_ADMIN_ROLE_ID =
+//   "6777c19804d333811d7c6538" || process.env.SUPER_ADMIN_ROLE_ID;
+// const ADMIN_ROLE_ID = "67150b16ad87f90fa3ff14a9" || process.env.ADMIN_ROLE_ID;
+const SUPER_ADMIN_ROLE_ID = process.env.SUPER_ADMIN_ROLE_ID;
+const ADMIN_ROLE_ID = process.env.ADMIN_ROLE_ID;
+console.log("pids : ", SUPER_ADMIN_ROLE_ID, ADMIN_ROLE_ID );
 
 class UserController {
   static getAllUser = catchAsyncError(async (req, res, next) => {
@@ -18,6 +21,7 @@ class UserController {
     const limit = parseInt(req.query.limit) || 12;
     const skip = (page - 1) * limit;
     const { config } = req.query;
+    console.log("")
 
     // Check if config is provided and is true
     if (config === "true") {

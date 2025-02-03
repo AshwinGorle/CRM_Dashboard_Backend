@@ -5,6 +5,7 @@ import IndustryMasterModel from "../../models/Configuration/IndustryModel.js";
 class IndustryController {
     // Create IndustryMaster
     static createIndustry = catchAsyncError(async (req, res, next) => {
+        console.log("create industry called !")
         const { label , description } = req.body;
         const newIndustryMaster = await IndustryMasterModel.create({ label, description });
         res.status(201).json({

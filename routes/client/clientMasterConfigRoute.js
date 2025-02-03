@@ -2,7 +2,7 @@ import { Router } from "express";
 import ClientMasterConfigController from "../../controllers/ClientMaster/clientMasterConfigController.js";
 const clientMasterConfigRouter = Router();
 //----------------------------Classification-------------------------
-
+console.log("inside config ")
 clientMasterConfigRouter.get(
   "/classification",
   ClientMasterConfigController.getAllClassifications

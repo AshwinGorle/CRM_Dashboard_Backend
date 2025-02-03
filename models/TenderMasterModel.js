@@ -80,7 +80,7 @@ const TenderMasterSchema = new mongoose.Schema(
     },
     stage: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Stage",
+      ref: "TenderStage",
     },
     stageExplanation: {
       type: String,

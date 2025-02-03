@@ -8,27 +8,27 @@ const entity = "CONFIGURATION";
 
 industryRouter.get(
   "/",
-  checkPermissions(entity, actionTypes.GET_ALL),
+  // checkPermissions(entity, actionTypes.GET_ALL),
   IndustryController.getAllIndustry
 );
 industryRouter.get(
   "/:id",
-  checkPermissions(entity, actionTypes.READ),
+  // checkPermissions(entity, actionTypes.READ),
   IndustryController.getIndustryById
 );
 industryRouter.post(
   "/",
-  checkPermissions(entity, actionTypes.CREATE),
+  // checkPermissions(entity, actionTypes.CREATE),
   IndustryController.createIndustry
 );
 industryRouter.put(
   "/:id",
-  checkPermissions(entity, actionTypes.UPDATE),
+  // checkPermissions(entity, actionTypes.UPDATE),
   IndustryController.updateIndustry
 );
 industryRouter.delete(
   "/:id",
-  checkPermissions(entity, actionTypes.DELETE),
+  // checkPermissions(entity, actionTypes.DELETE),
   IndustryController.deleteIndustry
 );
 

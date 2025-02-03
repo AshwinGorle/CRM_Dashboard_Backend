@@ -7,6 +7,6 @@ const tenderStageSchema = new mongoose.Schema({
     }
 })
 
-const TenderStageModel = new mongoose.model("Stage",tenderStageSchema);
+const TenderStageModel = new mongoose.model("TendersStage",tenderStageSchema);
 export default TenderStageModel;
 // Stage

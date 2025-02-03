@@ -7,7 +7,8 @@ import { fixedRole } from "../config/fixedRole.js";
 const checkPermissions = (resource, action, targetEntityId = null) => {
   return async (req, res, next) => {
     try {
-      // return next();
+  
+      // if(resource == 'CONFIGURATION') return next();
       console.log("Resource:", resource);
       console.log("Action:", action);
 

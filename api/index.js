@@ -50,6 +50,13 @@ const PORT = process.env.PORT || 5000;
 const DB_URL = process.env.DATABASE2_URL;
 connectDb(DB_URL);
 
+// app.use("/client", clientMasterRouter);
+// app.use("/contact", contactMasterRouter);
+// app.use("/tender", tenderMasterRouter);
+// app.use("/registration", registrationMasterRouter);
+
+
+
 app.get("/", homePage);
 app.use("/target", targetRouter);
 app.use("/system", systemRouter);

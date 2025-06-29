@@ -102,10 +102,12 @@ class ClientMasterController {
     });
 
     // Ensure relatedContacts is an array and not empty
-    await parseContacts(relatedContacts, newClient);
+    parseContacts(relatedContacts, newClient);
 
     // handles avatar changes in client
+    
     if (req.file) {
+      console.log("request.file--------")
       const avatarUrl = await uploadAndGetAvatarUrl(
         req.file,
         "client",
@@ -209,7 +211,7 @@ class ClientMasterController {
 
     // Updating directly updatable fields
     Object.keys(updateData).forEach((key) => {
-      if (key != "relatedContacts") client[key] = updateData[key];
+      if (key != "relatedContacts" && key != "avatar") client[key] = updateData[key];
     });
 
     // Parsing Related contacts
@@ -223,6 +225,7 @@ class ClientMasterController {
 
     // Handle Client Avatar change
     if (req.file) {
+      console.log("there is file in request")
       client.avatar = await uploadAndGetAvatarUrl(
         req.file,
         "client",
@@ -230,6 +233,7 @@ class ClientMasterController {
         "stream"
       );
     }
+    console.log("client avatar------", client?.avatar)
     await client.validate();
     await client.save({ session });
     // on change of ( territory || name ) we have to update tenders and opportunities custom id associated with this client

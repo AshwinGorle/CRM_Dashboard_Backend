@@ -123,8 +123,9 @@ class UserController {
   });
 
   static updateUser = catchAsyncError(async (req, res, next) => {
+    console.log("update-user-request", req)
     const id = req.params.id;
-    const updateData = req.body;
+    const updateData = req.body;4
 
     const user = await UserModel.findById(id);
     if (!user) throw new ServerError("NotFound", "user");
@@ -141,9 +142,10 @@ class UserController {
           user[key] = updateData[key];
         }
     });
-    if (req.file) {
+    if (req.body.avatar) {
+      console.log("executing file")
       user.avatar = await uploadAndGetAvatarUrl(
-        req.file,
+        req?.body?.avatar,
         "user",
         user._id,
         "stream"

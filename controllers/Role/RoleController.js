@@ -23,10 +23,6 @@ class RoleController {
       name: { $nin: [fixedRole.SUPER_ADMIN] },
     });
 
-    const filteredRoles = roles?.filter(
-      (role) => role.name != fixedRole.SUPER_ADMIN
-    );
-
     if (!roles || roles.length === 0) {
       throw new ServerError("NotFound", "Roles not found");
     }

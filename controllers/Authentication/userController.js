@@ -11,22 +11,22 @@ import AuthController from "./authController.js";
 // const ADMIN_ROLE_ID = "67150b16ad87f90fa3ff14a9" || process.env.ADMIN_ROLE_ID;
 const SUPER_ADMIN_ROLE_ID = process.env.SUPER_ADMIN_ROLE_ID;
 const ADMIN_ROLE_ID = process.env.ADMIN_ROLE_ID;
-console.log("pids : ", SUPER_ADMIN_ROLE_ID, ADMIN_ROLE_ID );
+console.log("pids : ", SUPER_ADMIN_ROLE_ID, ADMIN_ROLE_ID);
 
 class UserController {
   static getAllUser = catchAsyncError(async (req, res, next) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 12;
     const skip = (page - 1) * limit;
+    const deleted = req.query.deleted === "true";
     const { config } = req.query;
-    console.log("")
 
     // Check if config is provided and is true
     if (config === "true") {
       const users = await UserModel.find({
         $and: [
           { role: { $nin: [SUPER_ADMIN_ROLE_ID, ADMIN_ROLE_ID] } },
-          { $or: [{ isDeleted: null }, { isDeleted: false }] },
+          { $or: [{ isDeleted: null }, { isDeleted: deleted }] },
         ],
       }).select("firstName lastName");
 
@@ -40,7 +40,7 @@ class UserController {
     let baseQuery = {
       $and: [
         { _id: { $ne: req.user._id } },
-        { $or: [{ isDeleted: null }, { isDeleted: false }] },
+        { $or: [{ isDeleted: null }, { isDeleted: deleted }] },
         {
           role: {
             $nin: [SUPER_ADMIN_ROLE_ID],
@@ -123,9 +123,10 @@ class UserController {
   });
 
   static updateUser = catchAsyncError(async (req, res, next) => {
-    console.log("update-user-request", req)
+    console.log("update-user-request", req);
     const id = req.params.id;
-    const updateData = req.body;4
+    const updateData = req.body;
+    4;
 
     const user = await UserModel.findById(id);
     if (!user) throw new ServerError("NotFound", "user");
@@ -143,7 +144,7 @@ class UserController {
         }
     });
     if (req.body.avatar) {
-      console.log("executing file")
+      console.log("executing file");
       user.avatar = await uploadAndGetAvatarUrl(
         req?.body?.avatar,
         "user",
@@ -180,11 +181,10 @@ class UserController {
     );
     res.status(201).json({
       status: "success",
-      message: "User deleted successfully",
+      message: `User ${deleteStatus ? "deleted" : "undo"} successfully`,
       data: { user },
     });
   });
-
 }
 
 export default UserController;
